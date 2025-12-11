@@ -1,0 +1,16 @@
+Visa Type,Category,Purpose/Use Case,Visa Fee (EUR)
+Schengen Visa (Type C),Short Stay,"Tourism, business, or family visits up to 90 days",90
+Airport Transit Visa,Transit,Changing planes in Germany without entering the country,90
+National Visa (Type D),Long Stay,"General long-stay visa (work, study, family, etc.)",75
+Student Visa,Study,Academic degree program at a German university,75
+Language Course Visa,Study,Intensive German language learning (3–12 months),75
+Job Seeker Visa,Work,Search for employment while in Germany (up to 6 months),75
+Work Visa,Work,Job offer with German employer in approved field,75
+EU Blue Card,Skilled Workers,Highly skilled professionals with university degree,75
+Freelancer Visa,Work,Freelancers or self-employed professionals,75
+Research Visa,Academic,Researchers invited by recognized institution,75
+Family Reunion Visa,Family,Join spouse or family member living in Germany,75
+Au Pair Visa,Work/Cultural Exchange,Young adults assisting host families with childcare,75
+Volunteer Visa (FSJ/BFD),Social Service,Voluntary social year programs,75
+Settlement Permit,Permanent Residence,Permanent residency after legal stay and integration,0
+Refugee/Asylum,Humanitarian,Protection for those fearing persecution,0

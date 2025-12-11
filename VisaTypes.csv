@@ -1,0 +1,11 @@
+Visa ID,Destination Country,Purpose,Visa Type Name,Processing Time
+USA-B2,USA,Tourism,B-2 Visitor Visa,2–6 weeks
+USA-F1,USA,Study,F-1 Student Visa,2–4 weeks
+UK-Visitor,UK,Tourism,Standard Visitor Visa,3 weeks
+UK-T4,UK,Study,Student Visa (Tier 4),3 weeks
+CA-TRV,Canada,Tourism,Visitor Visa (TRV),3–6 weeks
+CA-SP,Canada,Study,Study Permit,6 weeks
+EU-TypeC,Schengen,Tourism,Short-Stay Schengen Visa (Type C),2–3 weeks
+EU-TypeD,Schengen,Study,Long-Stay National Visa (Type D),4–8 weeks
+AU-600,Australia,Tourism,Visitor Visa (Subclass 600),3–4 weeks
+AU-500,Australia,Study,Student Visa (Subclass 500),4–6 weeks

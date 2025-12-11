@@ -1,0 +1,25 @@
+,Visa Type,Category,Purpose / Use Case,Visa Fee,Source_Country,Mapped Categories Array,Currency
+6,H-2A,Agricultural Worker,,205,US,['Work/Employment'],USD
+7,H-2B,Non-Agricultural Worker,,205,US,['Work/Employment'],USD
+8,L-1,Intra-Company Transferee,,205,US,['Work/Employment'],USD
+9,O-1,Extraordinary Ability,,205,US,['Work/Employment'],USD
+10,P-1,Athlete/Entertainer,,205,US,['Work/Employment'],USD
+11,R-1,Religious Worker,,205,US,,USD
+13,K-1,Fiancé(e) Visa,,265,US,,USD
+14,TN,NAFTA Professional,,205,US,,USD
+16,IR2/CR2,Child of U.S. Citizen,,325,US,,USD
+24,EB-4,Special Immigrant,,345,US,,USD
+25,EB-5,Investor Visa,,345,US,,USD
+26,DV,Diversity Visa,,330,US,,USD
+27,SIJS,Juvenile Status,,0,US,,USD
+60,Schengen Visa (Type C),Short Stay,,,Germany,,USD
+83,Entrepreneur Visa,Work,Starting a business or self-employment in France,EUR 99,France,,USD
+112,Entrepreneur Visa,Work,Startups and innovation-based businesses,EUR 60,Spain,,USD
+124,Tour Operator Representative Visa,,Staff of tour operators,USD 80,Turkey,,USD
+129,Private Visa,,Visiting friends or relatives,USD 160,Russia,['Family & Friends-related'],USD
+135,Temporary Residence Permit Visa,,Initial entry before TRP approval,USD 160,Russia,['Residency'],USD
+143,Dependant’s Pass,,Spouses and children of pass holders,SGD 105,Singapore,"['Family & Friends-related', 'Residency']",USD
+144,Long-Term Visit Pass,,Parents or common-law partners of pass holders,SGD 105,Singapore,"['Family & Friends-related', 'Residency']",USD
+152,Partner Visa (subclass 820/801),,Partner of Australian citizen or PR,"AUD 8,850",Australia,"['Family & Friends-related', 'Residency']",USD
+171,Express Visa,,"Fast track entry, valid for 3 weeks",OMR 30,Oman,,USD
+223,Golden Visa,,"Long-term residence for investors, talents, professionals",AED 4850,UAE,['Residency'],USD

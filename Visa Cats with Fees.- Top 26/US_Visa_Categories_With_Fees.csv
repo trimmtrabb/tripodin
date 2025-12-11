@@ -1,0 +1,30 @@
+Visa Type,Category,Purpose/Use Case,Visa Fee (USD)
+B-1,Business Visitor,Temporary business travel,185
+B-2,Tourist Visitor,"Leisure travel, medical treatment",185
+F-1,Student (Academic),Full-time study at accredited institution,185
+M-1,Student (Vocational),Non-academic or vocational study,185
+J-1,Exchange Visitor,"Cultural exchange, includes many subcategories",185
+H-1B,Skilled Worker,Specialty occupation requiring degree,205
+H-2A,Agricultural Worker,Seasonal agricultural jobs,205
+H-2B,Non-Agricultural Worker,Seasonal non-agricultural work,205
+L-1,Intra-Company Transferee,Transfer within multinational company,205
+O-1,Extraordinary Ability,Individuals with extraordinary skills,205
+P-1,Athlete/Entertainer,Team athletes or performance artists,205
+R-1,Religious Worker,Work for religious organization,205
+C-1,Transit Visa,Passing through U.S. en route to another country,185
+K-1,Fiancé(e) Visa,For fiancé(e) of U.S. citizen,265
+TN,NAFTA Professional,Certain professionals from Canada/Mexico,205
+IR1/CR1,Spouse of U.S. Citizen,Marriage-based green card,325
+IR2/CR2,Child of U.S. Citizen,Minor children of U.S. citizens,325
+F1,Family 1st Preference,Unmarried sons/daughters of citizens,325
+F2A/F2B,Family 2nd Preference,Spouse/children of green card holders,325
+F3,Family 3rd Preference,Married sons/daughters of citizens,325
+F4,Family 4th Preference,Siblings of U.S. citizens,325
+EB-1,Employment 1st Preference,"Extraordinary ability, executives",345
+EB-2,Employment 2nd Preference,Advanced degree holders,345
+EB-3,Employment 3rd Preference,Skilled/unskilled workers,345
+EB-4,Special Immigrant,"Religious workers, others",345
+EB-5,Investor Visa,Investment of $800K+ creating jobs,345
+DV,Diversity Visa,Green card lottery for underrepresented nations,330
+SIJS,Juvenile Status,For abused/neglected minors,0
+Refugee/Asylee,Humanitarian,Protection from persecution,0

@@ -1,0 +1,38 @@
+BEGIN:VCALENDAR
+PRODID:-//AddEvent Inc//AddEvent.com v1.7//EN
+VERSION:2.0
+BEGIN:VTIMEZONE
+TZID:America/New_York
+BEGIN:STANDARD
+DTSTART:20251102T010000
+RRULE:FREQ=YEARLY;BYDAY=1SU;BYMONTH=11
+TZOFFSETFROM:-0400
+TZOFFSETTO:-0500
+TZNAME:EST
+END:STANDARD
+BEGIN:DAYLIGHT
+DTSTART:20250309T030000
+RRULE:FREQ=YEARLY;BYDAY=2SU;BYMONTH=3
+TZOFFSETFROM:-0500
+TZOFFSETTO:-0400
+TZNAME:EDT
+END:DAYLIGHT
+END:VTIMEZONE
+BEGIN:VEVENT
+DTSTAMP:20250916T122129Z
+STATUS:CONFIRMED
+UID:1758025289addeventcom
+SEQUENCE:0
+DTSTART;TZID=America/New_York:20250916T140000
+DTEND;TZID=America/New_York:20250916T153000
+SUMMARY:The Love Life Reset with Matthew Hussey
+DESCRIPTION:Join Matthew Hussey for his last free live event of 2025 - The Love Life Reset: Discover the ONE Crucial Step to Reclaim the Power in Your Love Life—FAST\n\nHere's your link to  join the Live Event: https://youtube.com/live/VMB-28WQouk\n\nHere’s what you’ll discover inside:\n\n🚀 The single most important step that takes you from feeling powerless in love to back in the driver’s seat and able to tackle anything that comes your way.\n\n💎 How to build unshakable confidence so you can stop second-guessing yourself and approach dating with curiosity\, calm and openness.\n\n💌 Simple strategies you can rely on to take the sting out of rejection\, letting you enjoy connection without the fear of it all falling apart.\n\n🚩 Matthew's repeatable framework for spotting red flags early—before they cost you precious time\, energy\, or heartache (and so you know exactly when to walk away).\n\n🧘 The secret to end the overthinking spiral—so instead of being hijacked by your fears\, you can relax\, connect\, and let connection unfold naturally.\n\n🌟 How to replace uncertainty and confusion with a proactive vision for the love life you truly want (and feel excited about building)\n\nSee you there!
+X-ALT-DESC;FMTTYPE=text/html:Join Matthew Hussey for his last free live event of 2025 - The Love Life Reset:<strong> </strong>Discover the ONE Crucial Step to Reclaim the Power in Your Love Life—FAST<br><br>Here's your link to  join the Live Event: <span data-sheets-root="1"><a href="https://youtube.com/live/VMB-28WQouk" target="_blank">https://youtube.com/live/VMB-28WQouk</a></span><br><br><strong>Here’s what you’ll discover inside:</strong><br><br>🚀 The single most important step that takes you from feeling powerless in love to back in the driver’s seat and able to tackle anything that comes your way.<strong><br><br></strong>💎 How to build unshakable confidence so you can stop second-guessing yourself and approach dating with curiosity, calm and openness.<br><br>💌 Simple strategies you can rely on to take the sting out of rejection, letting you enjoy connection without the fear of it all falling apart.<br><br>🚩 Matthew's repeatable framework for spotting red flags early—before they cost you precious time, energy, or heartache (and so you know exactly when to walk away).<br><br>🧘 The secret to end the overthinking spiral—so instead of being hijacked by your fears, you can relax, connect, and let connection unfold naturally.<br><br>🌟 How to replace uncertainty and confusion with a proactive vision for the love life you truly want (and feel <em>excited </em>about building)<br><br>See you there!
+BEGIN:VALARM
+TRIGGER:-PT30M
+ACTION:DISPLAY
+DESCRIPTION:Reminder
+END:VALARM
+TRANSP:OPAQUE
+END:VEVENT
+END:VCALENDAR

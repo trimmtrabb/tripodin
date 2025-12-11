@@ -1,0 +1,221 @@
+Visa Type,Category,Purpose / Use Case,Visa Fee (USD),Source_Country,Visa Fee (EUR),Visa Fee (CAD),Mapped Categories Array
+Short-stay Schengen Visa,Tourism/Business,"Tourism, business, family visits ≤90 days",EUR 80,France,,,"['Business', 'Visiting Family/Friends']"
+Airport Transit Visa (Type A),Transit,Transit through French international airports,EUR 80,France,,,['Transit']
+Short-stay Overseas Visa,Tourism/Business,"Travel to French overseas territories (e.g. Réunion, Martinique)",EUR 80,France,,,['Business']
+Long-stay Visa (Type D),,"Stay >90 days (work, study, family reunification)",EUR 99,France,,,"['Visiting Family/Friends', 'Study', 'Work/Employment']"
+Student Visa (Long-stay),Study,University or higher education >90 days,EUR 99,France,,,['Study']
+Temporary Long-stay Visa (VLS-T),Tourism/Business,4–6 month temporary stays (e.g. second home visits),EUR 99,France,,,['Business']
+Working Holiday Visa,Work,Work + travel for young adults (reciprocal agreements),EUR 99,France,,,"['Tourism & Sightseeing', 'Work/Employment']"
+Talent Passport,Work,"For highly skilled professionals, researchers, artists",EUR 99,France,,,['Work/Employment']
+Entrepreneur Visa,Work,Starting a business or self-employment in France,EUR 99,France,,,"['Business', 'Work/Employment']"
+Scientific/Research Visa,Work,Participation in academic or scientific programs,EUR 99,France,,,"['Study', 'Work/Employment', 'Cultural Exchange']"
+Volunteer/Exchange Program Visa,Exchange,"Cultural, humanitarian, youth programs",EUR 99,France,,,"['Cultural Exchange', 'Asylum/Humanitarian']"
+Family/Spouse of EU National,,Joining a French or EU citizen,Free or EUR 99 depending on status,France,,,['Visiting Family/Friends']
+Airport Transit Visa,Transit,Changing planes in Germany without entering the country,,Germany,90.0,,['Transit']
+Student Visa,Study,Academic degree program at a German university,,Germany,75.0,,['Study']
+Language Course Visa,Study,Intensive German language learning (3–12 months),,Germany,75.0,,['Study']
+Job Seeker Visa,Work,Search for employment while in Germany (up to 6 months),,Germany,75.0,,['Work/Employment']
+Work Visa,Work,Job offer with German employer in approved field,,Germany,75.0,,['Work/Employment']
+EU Blue Card,Skilled Workers,Highly skilled professionals with university degree,,Germany,75.0,,"['Study', 'Work/Employment']"
+Freelancer Visa,Work,Freelancers or self-employed professionals,,Germany,75.0,,['Work/Employment']
+Research Visa,Academic,Researchers invited by recognized institution,,Germany,75.0,,"['Study', 'Cultural Exchange']"
+Family Reunion Visa,Family,Join spouse or family member living in Germany,,Germany,75.0,,['Visiting Family/Friends']
+Au Pair Visa,Work/Cultural Exchange,Young adults assisting host families with childcare,,Germany,75.0,,"['Work/Employment', 'Cultural Exchange']"
+Volunteer Visa (FSJ/BFD),Social Service,Voluntary social year programs,,Germany,75.0,,['Cultural Exchange']
+Settlement Permit,Permanent Residence,Permanent residency after legal stay and integration,,Germany,0.0,,['Residency']
+Refugee/Asylum,Humanitarian,Protection for those fearing persecution,,Germany,0.0,,['Asylum/Humanitarian']
+Short-stay Schengen Visa,Tourism/Business,"Tourism, family or business (≤90 days)",EUR 80,Spain,,,"['Business', 'Visiting Family/Friends']"
+Airport Transit Visa,Transit,Airside transit through Spanish airports,EUR 80,Spain,,,['Transit']
+Long-stay National Visa,,"Stays >90 days for study, work, or family",EUR 60–80,Spain,,,"['Visiting Family/Friends', 'Study', 'Work/Employment']"
+Student Visa,Study,"University, language or vocational study programs",EUR 60,Spain,,,['Study']
+Work Visa,Work,Skilled and unskilled employment contracts,EUR 60,Spain,,,['Work/Employment']
+Entrepreneur Visa,Work,Startups and innovation-based businesses,EUR 60,Spain,,,['Work/Employment']
+Digital Nomad Visa,Work,Remote workers employed by non-Spanish companies,EUR 60,Spain,,,['Work/Employment']
+Non-lucrative Visa,,Living in Spain without working,EUR 80,Spain,,,['Work/Employment']
+Family Reunification Visa,,"Spouses, children, dependent relatives",EUR 80,Spain,,,['Visiting Family/Friends']
+Volunteer Visa,Exchange,NGO-supported youth and social work,EUR 80,Spain,,,"['Work/Employment', 'Cultural Exchange']"
+Tourist Visa,Tourism/Business,Tourism for up to 30 days,USD 40–160,Russia,,,"['Tourism & Sightseeing', 'Business']"
+Business Visa,Tourism/Business,"Meetings, conferences, trade missions",USD 160,Russia,,,['Business']
+Student Visa,Study,Full-time education at Russian institutions,USD 80–160,Russia,,,['Study']
+Work Visa,Work,Employment contracts or government-invited jobs,USD 160,Russia,,,"['Work/Employment', 'Diplomatic/Official']"
+Humanitarian Visa,Exchange,"Cultural, scientific, religious exchanges",USD 160,Russia,,,"['Cultural Exchange', 'Asylum/Humanitarian']"
+Transit Visa,Transit,Land/air transit through Russia,USD 40,Russia,,,['Transit']
+Highly Qualified Specialist Visa,Work,Fast-track for top professionals,USD 160,Russia,,,['Work/Employment']
+Short-stay Schengen Visa,Tourism/Business,"Tourism, business meetings, family visits (≤90 days)",CHF 80,Switzerland,,,"['Business', 'Visiting Family/Friends']"
+Airport Transit Visa,Transit,Transit through Swiss airports,CHF 80,Switzerland,,,['Transit']
+National Visa (Type D),,"Long-term stay >90 days (study, work, reunification)",CHF 99,Switzerland,,,"['Study', 'Work/Employment']"
+Student Visa,Study,University or academic programs >90 days,CHF 99,Switzerland,,,['Study']
+Work Visa (Permit B or L),Work,"Skilled employment, dependent on canton approval",CHF 88–99,Switzerland,,,"['Visiting Family/Friends', 'Work/Employment']"
+Research Visa,Work,Scientific collaboration or fellowship participation,CHF 99,Switzerland,,,"['Work/Employment', 'Cultural Exchange']"
+Family Reunification Visa,,Spouse/child of Swiss/EU resident,CHF 99,Switzerland,,,"['Visiting Family/Friends', 'Residency']"
+Au Pair Visa,Exchange,Language and cultural exchange with host family,CHF 99,Switzerland,,,"['Visiting Family/Friends', 'Cultural Exchange']"
+Internship Visa,Vocational,Professional training or internships,CHF 99,Switzerland,,,['Cultural Exchange']
+Cultural/Sports Visa,Exchange,Participation in international cultural or sports events,CHF 99,Switzerland,,,['Cultural Exchange']
+B-1,Business Visitor,Temporary business travel,185,US,,,"['Tourism & Sightseeing', 'Business']"
+B-2,Tourist Visitor,"Leisure travel, medical treatment",185,US,,,"['Tourism & Sightseeing', 'Medical']"
+F-1,Student (Academic),Full-time study at accredited institution,185,US,,,['Study']
+M-1,Student (Vocational),Non-academic or vocational study,185,US,,,['Study']
+J-1,Exchange Visitor,"Cultural exchange, includes many subcategories",185,US,,,"['Tourism & Sightseeing', 'Cultural Exchange']"
+H-1B,Skilled Worker,Specialty occupation requiring degree,205,US,,,['Work/Employment']
+C-1,Transit Visa,Passing through U.S. en route to another country,185,US,,,['Transit']
+IR1/CR1,Spouse of U.S. Citizen,Marriage-based green card,325,US,,,['Visiting Family/Friends']
+F1,Family 1st Preference,Unmarried sons/daughters of citizens,325,US,,,['Visiting Family/Friends']
+F2A/F2B,Family 2nd Preference,Spouse/children of green card holders,325,US,,,['Visiting Family/Friends']
+F3,Family 3rd Preference,Married sons/daughters of citizens,325,US,,,['Visiting Family/Friends']
+F4,Family 4th Preference,Siblings of U.S. citizens,325,US,,,['Visiting Family/Friends']
+EB-1,Employment 1st Preference,"Extraordinary ability, executives",345,US,,,['Work/Employment']
+EB-2,Employment 2nd Preference,Advanced degree holders,345,US,,,['Work/Employment']
+EB-3,Employment 3rd Preference,Skilled/unskilled workers,345,US,,,['Work/Employment']
+Refugee/Asylee,Humanitarian,Protection from persecution,0,US,,,['Asylum/Humanitarian']
+Tourist Visa,Tourism/Business,Short tourism or family visits,KWD 3,Kuwait,,,"['Tourism & Sightseeing', 'Business', 'Visiting Family/Friends']"
+Business Visa,Tourism/Business,"Conferences, business meetings",KWD 3,Kuwait,,,['Business']
+Work Visa,Work,Contracted employment in Kuwait,KWD 50,Kuwait,,,['Work/Employment']
+Student Visa,Study,Academic enrollment in Kuwait,KWD 50,Kuwait,,,['Study']
+Family Visa,,Dependents joining residents,KWD 10,Kuwait,,,['Visiting Family/Friends']
+Multiple Entry Visa,Tourism/Business,Business travelers or residents abroad,KWD 10,Kuwait,,,['Business']
+Visitor Visa (subclass 600),Tourism/Business,"Tourism, family visits, short business trips",AUD 190,Australia,,,"['Tourism & Sightseeing', 'Business', 'Visiting Family/Friends']"
+Student Visa (subclass 500),Study,Full-time study at an Australian institution,AUD 710,Australia,,,['Study']
+Temporary Graduate Visa (subclass 485),Work,Work after study (post-graduation),"AUD 1,895",Australia,,,"['Study', 'Work/Employment']"
+Skilled Independent Visa (subclass 189),Work,Permanent residency for skilled workers,"AUD 4,640",Australia,,,"['Work/Employment', 'Residency']"
+Employer Nomination Scheme (subclass 186),Work,Employer-sponsored permanent visa,"AUD 4,640",Australia,,,"['Work/Employment', 'Residency']"
+Temporary Skill Shortage Visa (subclass 482),Work,Temporary skilled workers,"AUD 1,455–3,035",Australia,,,['Work/Employment']
+Working Holiday Visa (subclass 417),Work,Young adults aged 18–30 from eligible countries,AUD 635,Australia,,,"['Tourism & Sightseeing', 'Work/Employment']"
+Transit Visa (subclass 771),Transit,Transit through Australia for up to 72 hours,Free,Australia,,,['Transit']
+Visitor Visa (TRV),Tourism/Business,Visit Canada for tourism or business,,Canada,,100.0,"['Tourism & Sightseeing', 'Business']"
+Super Visa,Family,Long-term visits for parents/grandparents of citizens,,Canada,,100.0,['Visiting Family/Friends']
+Study Permit,Study,Full-time academic/vocational studies in Canada,,Canada,,150.0,['Study']
+Post-Graduation Work Permit,Post-Study Work,Work after graduation from eligible institutions,,Canada,,255.0,"['Study', 'Work/Employment']"
+Open Work Permit,Work,Work without a specific employer (e.g. spouse of student),,Canada,,255.0,"['Visiting Family/Friends', 'Study', 'Work/Employment']"
+Employer-Specific Work Permit,Work,Job-specific permit tied to employer,,Canada,,155.0,['Work/Employment']
+Express Entry (FSW),Permanent Residence,"Skilled workers based on education, language, experience",,Canada,,1525.0,"['Study', 'Work/Employment', 'Residency']"
+Express Entry (CEC),Permanent Residence,Canadian experience class – work experience in Canada,,Canada,,1525.0,"['Work/Employment', 'Residency']"
+Express Entry (FST),Permanent Residence,Skilled trades professionals,,Canada,,1525.0,"['Work/Employment', 'Residency']"
+Provincial Nominee Program (PNP),Permanent Residence,Selected by province to settle in specific area,,Canada,,1525.0,['Residency']
+Start-Up Visa,Business Immigration,Innovative entrepreneurs with funding/support,,Canada,,2075.0,['Business']
+Self-Employed Persons,Business Immigration,Cultural/athletic contributors,,Canada,,2075.0,['Business']
+Spouse/Partner Sponsorship,Family,Join spouse or partner in Canada,,Canada,,1080.0,['Visiting Family/Friends']
+Refugee Claimant,Humanitarian,Protection for those fearing persecution,,Canada,,0.0,['Asylum/Humanitarian']
+IEC (Working Holiday),Work/Travel,18–35 y.o. from eligible countries to travel & work,,Canada,,161.0,"['Tourism & Sightseeing', 'Work/Employment']"
+Tourist Visa (e-Visa),Tourism/Business,"Short visit for leisure, family or business",SGD 30,Singapore,,,"['Tourism & Sightseeing', 'Business', 'Visiting Family/Friends']"
+Employment Pass (EP),Work,"Professionals with job offer earning ≥SGD 5,000/month",SGD 105–225,Singapore,,,['Work/Employment']
+S Pass,Work,"Mid-skilled staff earning ≥SGD 3,150/month",SGD 105–175,Singapore,,,['Work/Employment']
+Work Permit,Work,"Low-skilled jobs (construction, services)",SGD 35–100,Singapore,,,['Work/Employment']
+Student Pass,Study,For academic or vocational studies,SGD 30,Singapore,,,['Study']
+Training Work Permit,Vocational,Internships or short technical training,SGD 30,Singapore,,,"['Work/Employment', 'Cultural Exchange']"
+EntrePass,Work,Entrepreneurs launching startups,SGD 105,Singapore,,,['Work/Employment']
+Visit eVisa,Tourism/Business,Tourism or family visits up to 30 days,BHD 29,Bahrain,,,"['Business', 'Visiting Family/Friends']"
+Business Visa,Tourism/Business,"Commercial visits, meetings, or events",BHD 29,Bahrain,,,['Business']
+Work Visa,Work,Employment with Bahraini sponsor,BHD 100,Bahrain,,,['Work/Employment']
+Family Reunification Visa,,Joining a spouse or sponsor,BHD 40,Bahrain,,,['Visiting Family/Friends']
+Student Visa,Study,Full-time university studies,BHD 60,Bahrain,,,['Study']
+Multiple Entry Visa,Tourism/Business,Frequent travel over 1–3 months,BHD 60,Bahrain,,,['Business']
+Standard Visitor,Tourism/Business,"Tourism, business meetings, medical treatment",160,UK,,,"['Tourism & Sightseeing', 'Business', 'Medical']"
+Marriage Visitor,Marriage/Civil Partnership,Get married or form a civil partnership in the UK,160,UK,,,['Tourism & Sightseeing']
+Permitted Paid Engagement (PPE),Short-Term Work,"Experts invited for short engagements, e.g., artists, lecturers",160,UK,,,['Work/Employment']
+Student Visa,Study,Full-time academic study in UK institution,490,UK,,,['Study']
+Child Student,Study,Children 4-17 studying at independent schools,490,UK,,,['Study']
+Graduate Visa,Post-Study Work,Stay in the UK for 2–3 years after graduation,890,UK,,,"['Study', 'Work/Employment']"
+Skilled Worker,Work,Job offer in eligible skilled occupation,890,UK,,,['Work/Employment']
+Health and Care Worker,Work,Skilled workers in health and social care,0,UK,,,['Work/Employment']
+Global Talent,Work,Leaders or potential leaders in academia or arts,740,UK,,,['Work/Employment']
+Start-up,Business,New entrepreneurs starting an innovative business,480,UK,,,['Business']
+Innovator Founder,Business,Experienced entrepreneurs with viable business plans,1270,UK,,,['Business']
+High Potential Individual,Work,Graduates from top global universities,370,UK,,,['Work/Employment']
+Youth Mobility Scheme,Work/Travel,18–30 y.o. from eligible countries for 2 years,310,UK,,,['Work/Employment']
+Family Visa,Family Reunion,"Join family in the UK (spouse, partner, child)",2100,UK,,,['Visiting Family/Friends']
+UK Ancestry,Work/Settlement,Commonwealth citizens with UK-born grandparent,750,UK,,,"['Work/Employment', 'Residency']"
+Transit Visa,Transit,Pass through UK en route to another country,88,UK,,,['Transit']
+Tourist eVisa,Tourism/Business,Single or multiple entry (10 or 30 days),OMR 20,Oman,,,"['Tourism & Sightseeing', 'Business']"
+Business Visa,Tourism/Business,Business visits or commercial purpose,OMR 30,Oman,,,['Business']
+Work Visa,Work,Omani sponsor required; long-term employment,OMR 50,Oman,,,['Work/Employment']
+Student Visa,Study,For accredited educational programs,OMR 20,Oman,,,['Study']
+Family Joining Visa,,Spouses or children of residents,OMR 20,Oman,,,['Visiting Family/Friends']
+Short-stay Schengen Visa,Tourism/Business,"Tourism, family or business visits (≤90 days)",EUR 80,Italy,,,"['Business', 'Visiting Family/Friends']"
+Airport Transit Visa,Transit,Airport layovers or connecting flights,EUR 80,Italy,,,['Transit']
+National Visa (Type D),,"Long-stay purposes (work, study, reunification)",EUR 116,Italy,,,"['Study', 'Work/Employment']"
+Student Visa,Study,"University, language programs >90 days",EUR 50,Italy,,,['Study']
+Work Visa,Work,Sponsored employment under Decreto Flussi quota,EUR 116,Italy,,,['Work/Employment']
+Self-employment Visa,Work,"Freelancers, entrepreneurs, consultants",EUR 116,Italy,,,['Work/Employment']
+Seasonal Work Visa,Work,Agricultural and tourism sector jobs,EUR 116,Italy,,,['Work/Employment']
+Religious Visa,,Religious service or training,EUR 80,Italy,,,['Cultural Exchange']
+Volunteer Visa,Exchange,Community service with Italian NGO,EUR 80,Italy,,,['Cultural Exchange']
+Family Reunification Visa,,Joining relatives legally residing in Italy,EUR 116,Italy,,,['Visiting Family/Friends']
+Tourist Visa,Tourism/Business,"Single-entry, up to 30 days",QAR 100,Qatar,,,"['Tourism & Sightseeing', 'Business']"
+Business Visa,Tourism/Business,Short-term work/business trips,QAR 200,Qatar,,,"['Business', 'Work/Employment']"
+Work Visa,Work,Sponsored long-term employment,QAR 300,Qatar,,,['Work/Employment']
+Student Visa,Study,Enrolled full-time in Qatari institution,QAR 200,Qatar,,,['Study']
+Family Visa,,Dependent family members of expats,QAR 200,Qatar,,,['Visiting Family/Friends']
+GCC Resident Visa,,GCC residents entering Qatar,QAR 100,Qatar,,,['Residency']
+Tourist/Business e-Visa,Tourism/Business,Short stays for tourism or business,USD 50–100,Turkey,,,"['Tourism & Sightseeing', 'Business']"
+Airport Transit Visa,Transit,Transit through Turkish airports,USD 50,Turkey,,,['Transit']
+Student Visa,Study,Degree and non-degree studies,USD 80,Turkey,,,['Study']
+Work Visa,Work,Employment in Turkish firms,USD 140,Turkey,,,['Work/Employment']
+Internship Visa,Vocational,Corporate or academic internships,USD 80,Turkey,,,"['Study', 'Cultural Exchange']"
+Research Visa,Vocational,Field research or academic collaboration,USD 80,Turkey,,,"['Study', 'Cultural Exchange']"
+Family Reunification Visa,,Spouse/children of legal residents,USD 80,Turkey,,,['Visiting Family/Friends']
+Medical Treatment Visa,,Approved treatment in Turkish institutions,USD 80,Turkey,,,['Medical']
+Cultural/Sports Visa,Exchange,Short-term participation in cultural/sports activities,USD 80,Turkey,,,['Cultural Exchange']
+Tourist Visa (Short-term),Tourism/Business,"Tourism, valid 30 days",AED 330,UAE,,,"['Tourism & Sightseeing', 'Business']"
+Tourist Visa (Long-term),Tourism/Business,"Tourism, valid 90 days",AED 650,UAE,,,"['Tourism & Sightseeing', 'Business']"
+Multiple Entry Tourist Visa,Tourism/Business,"Tourism, valid for 5 years with multiple entries",AED 650,UAE,,,"['Tourism & Sightseeing', 'Business']"
+Business Visa,Tourism/Business,Business setup or meetings,AED 700,UAE,,,['Business']
+Work Visa,Work,Sponsorship by UAE employer,AED 500–1200,UAE,,,['Work/Employment']
+Student Visa,Study,Higher education in UAE universities,AED 300–700,UAE,,,['Study']
+Transit Visa (48-96 hours),Transit,Layovers for 48 or 96 hours,AED 50–100,UAE,,,['Transit']
+Visitor (V) Visa,Tourism/Business,"Tourism, business, events",USD 82,Colombia,,,"['Tourism & Sightseeing', 'Business']"
+Migrant (M) Visa,,"Work, study, family, permanent residence pathway",USD 282,Colombia,,,"['Visiting Family/Friends', 'Study', 'Work/Employment', 'Residency']"
+Resident (R) Visa,,Long-term residency (after 5 years in M),USD 430,Colombia,,,['Residency']
+Student Visa,Study,Academic studies in Colombia,USD 67,Colombia,,,['Study']
+Work Visa,Work,Formal work contracts,USD 282,Colombia,,,['Work/Employment']
+Transit Visa,Transit,Short stay en route to another country,USD 52,Colombia,,,['Transit']
+Tourist Visa (Single Entry),Tourism/Business,Tourism up to 60 days,"THB 2,000",Thailand,,,"['Tourism & Sightseeing', 'Business']"
+Tourist Visa (Multiple Entry),Tourism/Business,"Tourism for 6 months, 60-day stays","THB 5,000",Thailand,,,"['Tourism & Sightseeing', 'Business']"
+Visa on Arrival,Tourism/Business,15-day entry for eligible countries,"THB 2,000",Thailand,,,['Business']
+Non-Immigrant B Visa,Work,"Business, employment","THB 2,000",Thailand,,,"['Business', 'Work/Employment']"
+Education Visa (ED),Study,Academic enrollment,"THB 2,000",Thailand,,,['Study']
+SMART Visa,Work,"Experts, investors, executives in tech sectors","THB 10,000",Thailand,,,['Work/Employment']
+Transit Visa,Transit,Transit up to 30 days,THB 800,Thailand,,,['Transit']
+Tourist Visa (eVisa),Tourism/Business,30-day single entry,USD 25,Vietnam,,,"['Tourism & Sightseeing', 'Business']"
+Tourist Visa (multiple entry),Tourism/Business,30–90 days,USD 50–95,Vietnam,,,"['Tourism & Sightseeing', 'Business']"
+Business Visa (DN),Tourism/Business,Short business trips,USD 80–150,Vietnam,,,['Business']
+Work Visa (LD),Work,Employment in Vietnam,USD 100–155,Vietnam,,,['Work/Employment']
+Student Visa,Study,Education in Vietnamese institutions,USD 50–100,Vietnam,,,['Study']
+Temporary Residence Card,,"For work, study or family >1 year",USD 145–155,Vietnam,,,"['Visiting Family/Friends', 'Study', 'Work/Employment']"
+Transit Visa,Transit,For connecting flights,USD 15,Vietnam,,,['Transit']
+Tourist eVisa,Tourism/Business,"Leisure travel, 1-year multiple entry",SAR 535,Saudi_Arabia,,,"['Tourism & Sightseeing', 'Business']"
+Business Visa,Tourism/Business,Commercial activities,SAR 807,Saudi_Arabia,,,['Business']
+Work Visa,Work,Employment sponsorship required,SAR 750,Saudi_Arabia,,,['Work/Employment']
+Student Visa,Study,Higher education programs,SAR 100,Saudi_Arabia,,,['Study']
+Family Visit Visa,,Visiting relatives,SAR 300,Saudi_Arabia,,,['Visiting Family/Friends']
+Umrah Visa,Tourism/Business,Religious pilgrimage (Umrah),SAR 300,Saudi_Arabia,,,['Business']
+Transit Visa,Transit,Stopover up to 96 hours,Free,Saudi_Arabia,,,['Transit']
+Tourist Visa,Tourism/Business,"Leisure, sightseeing, or family visits (90 days)",USD 150,Argentina,,,"['Tourism & Sightseeing', 'Business', 'Visiting Family/Friends']"
+Business Visa,Tourism/Business,"Meetings, trade shows, conferences",USD 200,Argentina,,,['Business']
+Work Visa,Work,Employment contracts with Argentinian companies,USD 250,Argentina,,,['Work/Employment']
+Student Visa,Study,Full-time academic programs,USD 150,Argentina,,,['Study']
+Temporary Residence Visa,,"Work, study, religious or dependent family reunification",USD 250,Argentina,,,"['Visiting Family/Friends', 'Study', 'Work/Employment']"
+Transit Visa,Transit,Transit through Argentina (max 10 days),USD 40,Argentina,,,['Transit']
+Tourist Visa,Tourism/Business,Sightseeing or visiting friends/family,USD 80,Brazil,,,"['Tourism & Sightseeing', 'Business', 'Visiting Family/Friends']"
+Business Visa,Tourism/Business,Business negotiations and meetings,USD 100,Brazil,,,['Business']
+Work Visa (VITEM V),Work,Formal job offers and labor contracts,USD 290,Brazil,,,['Work/Employment']
+Student Visa (VITEM IV),Study,University or language programs,USD 100,Brazil,,,['Study']
+Cultural/Research Visa,Exchange,Participation in cultural or research programs,USD 100,Brazil,,,['Cultural Exchange']
+Transit Visa,Transit,Travel through Brazil to another destination,USD 20,Brazil,,,['Transit']
+Tourist Visa,Tourism/Business,Leisure or short-term visits,USD 100,Chile,,,"['Tourism & Sightseeing', 'Business']"
+Business Visa,Tourism/Business,Commercial visits and agreements,USD 150,Chile,,,['Business']
+Work Visa,Work,Employment in Chilean entities,USD 160,Chile,,,['Work/Employment']
+Student Visa,Study,University or research enrollment,USD 100,Chile,,,"['Study', 'Cultural Exchange']"
+Temporary Resident Visa,,"Family, work, or study-related longer stays",USD 200,Chile,,,"['Visiting Family/Friends', 'Study', 'Work/Employment', 'Residency']"
+Transit Visa,Transit,Passing through Chile,USD 30,Chile,,,['Transit']
+Tourist Visa,Tourism/Business,"Leisure, family, and cultural visits",USD 51,Mexico,,,"['Tourism & Sightseeing', 'Business', 'Visiting Family/Friends']"
+Business Visa,Tourism/Business,Short-term business activities,USD 51,Mexico,,,['Business']
+Work Visa,Work,Employment contracts (temporary or permanent),USD 290,Mexico,,,"['Work/Employment', 'Residency']"
+Student Visa,Study,Full-time academic studies,USD 48,Mexico,,,['Study']
+Temporary Resident Visa,,"Stays >180 days for work, study, or family",USD 48,Mexico,,,"['Visiting Family/Friends', 'Study', 'Work/Employment', 'Residency']"
+Transit Visa,Transit,Crossing Mexico to another country,USD 25,Mexico,,,['Transit']
+Tourist Visa,Tourism/Business,"Leisure, sightseeing, visiting relatives",USD 30,Peru,,,"['Tourism & Sightseeing', 'Business']"
+Business Visa,Tourism/Business,Commercial and professional visits,USD 30,Peru,,,['Business']
+Work Visa,Work,Peruvian company sponsorship,USD 60,Peru,,,['Work/Employment']
+Student Visa,Study,Academic or research enrollment,USD 30,Peru,,,"['Study', 'Cultural Exchange']"
+Family Reunification Visa,,Joining Peruvian citizens or residents,USD 60,Peru,,,['Visiting Family/Friends']
+Transit Visa,Transit,Transit through Peruvian territory,USD 30,Peru,,,['Transit']
