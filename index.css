@@ -1,0 +1,45 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root { color-scheme: light; }
+
+body { @apply bg-slate-50 text-slate-900; }
+
+.gradient-header { @apply bg-gradient-to-r from-primary-100 to-white; }
+.card { @apply rounded-xl border border-slate-200 bg-white shadow-sm; }
+.btn { @apply inline-flex items-center justify-center rounded-md px-3 py-2 text-sm font-medium transition; }
+.btn-primary { @apply bg-primary-500 text-white hover:bg-primary-500/90; }
+.btn-secondary { @apply bg-white border border-slate-300 text-slate-900 hover:bg-slate-50; }
+.badge { @apply px-2 py-1 rounded text-xs font-semibold; }
+.badge-best { @apply bg-blue-100 text-blue-700 border border-blue-200; }
+.badge-selected { @apply bg-green-100 text-green-700 border border-green-200; }
+
+.pill { @apply inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm font-medium shadow-sm; }
+.pill-blue { @apply bg-blue-100 text-blue-700; }
+.pill-green { @apply bg-green-100 text-green-700; }
+.hero-title { @apply text-2xl md:text-3xl font-bold; }
+.hero-sub { @apply text-slate-600; }
+
+.bubble { @apply rounded-xl border border-slate-200 bg-white shadow-sm; }
+.bubble-green { @apply bg-green-50 border-green-200; }
+.bubble-blue { @apply bg-blue-50 border-blue-200; }
+.btn-lg { @apply px-4 py-3 text-base rounded-lg; }
+.icon-square { @apply h-8 w-8 rounded-md grid place-items-center; }
+
+@keyframes fadeInUp { 0% { opacity: 0; transform: translateY(8px);} 100% { opacity:1; transform: translateY(0);} }
+.animate-in { animation: fadeInUp .25s ease both; }
+
+.bp-card { @apply overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm; }
+.bp-header-blue { @apply bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-3 flex items-center justify-between; }
+.bp-header-purple { @apply bg-gradient-to-r from-purple-500 to-purple-600 text-white px-4 py-3 flex items-center justify-between; }
+.bp-header-green { @apply bg-gradient-to-r from-green-500 to-green-600 text-white px-4 py-3 flex items-center justify-between; }
+.bp-code { @apply font-mono tracking-wider text-lg; }
+.bp-grid { @apply p-4 grid md:grid-cols-2 gap-3; }
+
+.route-chip { @apply inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm bg-blue-50 border border-blue-200 text-blue-700; }
+.route-dots { @apply flex items-center gap-2 mt-2; }
+.route-dot { @apply w-3 h-3 rounded-full bg-blue-500; }
+.route-line { @apply h-px flex-1 bg-blue-200; }
+.meter { @apply w-full h-3 rounded-full bg-slate-200 overflow-hidden; }
+.meter-fill { @apply h-full bg-gradient-to-r from-green-500 to-blue-500; }
