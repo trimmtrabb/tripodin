@@ -89,6 +89,7 @@ function Chatbot({ onSetDest, onSetOrigin, user, setRoute }: { onSetDest: (c: st
   const [fromCity, setFromCity] = useState<string>("");
   const [toCity, setToCity] = useState<string>("");
   const [upsellShown, setUpsellShown] = useState(false);
+  const [showMulti, setShowMulti] = useState(false);
   const listRef = React.useRef<HTMLDivElement>(null);
   React.useEffect(() => {
     const el = listRef.current;
@@ -177,7 +178,7 @@ function Chatbot({ onSetDest, onSetOrigin, user, setRoute }: { onSetDest: (c: st
               {m.type === "text" ? (<div>{m.text}</div>) : null}
               {m.type === "noVisa" ? (<NoVisaBubble />) : null}
               {m.type === "selectCities" && dest && origin ? (
-                <SelectCitiesBubble originCountry={origin} destCountry={dest} onContinue={(f, t) => { setFromCity(f); setToCity(t); setCitiesSelected(true); if (!upsellShown) { setUpsellShown(true); setMessages((mm) => [...mm, { type: "upsell" }]); } }} />
+                <SelectCitiesBubble originCountry={origin} destCountry={dest} onContinue={(f, t) => { setFromCity(f); setToCity(t); setCitiesSelected(true); setShowMulti(true); if (!upsellShown) { setUpsellShown(true); setMessages((mm) => [...mm, { type: "upsell" }]); } }} />
               ) : null}
               {m.type === "info" ? (<InfoBubble title="Info" text={m.text || ""} />) : null}
               {m.type === "upsell" ? (
@@ -208,6 +209,7 @@ function Chatbot({ onSetDest, onSetOrigin, user, setRoute }: { onSetDest: (c: st
       <FlightModal open={showFlight} onClose={() => setShowFlight(false)} originCountry={origin || ""} destCountry={dest || ""} />
       <HotelModal open={showHotel} onClose={() => setShowHotel(false)} destCountry={dest || ""} />
       <InsuranceModal open={showInsurance} onClose={() => setShowInsurance(false)} originCountry={origin || ""} destCountry={dest || ""} />
+      <MultiCityModal open={showMulti} onClose={() => setShowMulti(false)} originCountry={origin || ""} destCountry={dest || ""} onSubmit={() => setShowMulti(false)} />
     </div>
   );
 }
