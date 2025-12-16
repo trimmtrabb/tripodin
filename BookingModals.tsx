@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { getCities } from "./cityData";
+import { getCities, distanceKm } from "./cityData";
 import { RoundTripConfirmation, HotelConfirmation, OpenJawConfirmation } from "./Confirmations";
 
 export function FlightModal({ open, onClose, originCountry, destCountry }: { open: boolean; onClose: () => void; originCountry: string; destCountry: string }) {
@@ -8,11 +8,30 @@ export function FlightModal({ open, onClose, originCountry, destCountry }: { ope
   const [from, setFrom] = useState<string>(originCities[0]?.name || "");
   const [to, setTo] = useState<string>(destCities[0]?.name || "");
   const [retFrom, setRetFrom] = useState<string>("");
-  const [tripType, setTripType] = useState<"oneway" | "round" | "multicity">("round");
+  const [tripType, setTripType] = useState<"oneway" | "round" | "openjaw" | "multicity">("round");
   const [dep, setDep] = useState<string>(() => new Date().toISOString().slice(0, 10));
   const [ret, setRet] = useState<string>(() => new Date(Date.now() + 86400000).toISOString().slice(0, 10));
   const [pax, setPax] = useState<number>(2);
   const [showConf, setShowConf] = useState(false);
+  useEffect(() => {
+    if (tripType === "openjaw") {
+      const o = originCities.find((c) => c.name === from);
+      const t = destCities.find((c) => c.name === to);
+      const candidates = destCities.filter((c) => c.name !== to && c.airport);
+      let best = candidates[0]?.name || "";
+      const hubSet = new Set(["FRA","LHR","CDG","MAD","BCN","DXB","AUH","BER","MUC","ORD","JFK","LAX","YYZ","YVR","SYD","MEL","SIN","FCO","MXP"]);
+      if (o && t && candidates.length) {
+        const hubs = candidates.filter((c) => hubSet.has((c.airport?.code || "").toUpperCase()));
+        const list = (hubs.length ? hubs : candidates).map((c) => ({ c, d: distanceKm(o as any, c as any) }));
+        best = list.sort((a, b) => a.d - b.d)[0].c.name;
+      }
+      setRetFrom(best);
+    } else if (tripType === "round") {
+      setRetFrom("");
+    } else if (tripType === "oneway") {
+      setRetFrom("");
+    }
+  }, [tripType, from, to, originCities, destCities]);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
     window.addEventListener("keydown", onKey);
@@ -21,8 +40,18 @@ export function FlightModal({ open, onClose, originCountry, destCountry }: { ope
   if (!open) return null;
   return (
     <div className="fixed inset-0 bg-black/40 grid place-items-center" onClick={onClose}>
-      <div className="card w-full max-w-2xl p-4" onClick={(e) => e.stopPropagation()}>
-        <div className="text-xl font-semibold mb-2">Book Flight</div>
+      <div className="card w-full max-w-2xl p-4 relative" onClick={(e) => e.stopPropagation()}>
+        <button 
+          className="absolute top-4 right-4 text-slate-400 hover:text-slate-600" 
+          onClick={onClose}
+          title="Close"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+        <div className="flex items-center gap-2 mb-2">
+          <div className="icon-square bg-blue-100 text-blue-600">✈️</div>
+          <div className="text-xl font-semibold">Book Flight</div>
+        </div>
         <div className="text-sm text-slate-600 mb-3">{from} ⇄ {to}</div>
         <div className="grid md:grid-cols-2 gap-3">
           <div>
@@ -38,6 +67,11 @@ export function FlightModal({ open, onClose, originCountry, destCountry }: { ope
             </select>
           </div>
         </div>
+        <div className="mt-3 flex gap-2">
+          <button className={`pill ${tripType === "oneway" ? "pill-blue" : ""}`} onClick={() => setTripType("oneway")}>One‑way</button>
+          <button className={`pill ${tripType === "round" ? "pill-blue" : ""}`} onClick={() => setTripType("round")}>Round‑trip</button>
+          <button className={`pill ${tripType === "openjaw" ? "pill-blue" : ""}`} onClick={() => setTripType("openjaw")}>Open‑jaw</button>
+        </div>
         {tripType === "round" ? (
           <div className="mt-3">
             <div className="text-sm mb-1">Return From (optional, different city)</div>
@@ -46,6 +80,22 @@ export function FlightModal({ open, onClose, originCountry, destCountry }: { ope
               {destCities.map((c) => (<option key={c.name} value={c.name}>{c.name}</option>))}
             </select>
             <div className="text-xs text-slate-500 mt-1">Leaving blank means return flight will start from {to}.</div>
+          </div>
+        ) : tripType === "openjaw" ? (
+          <div className="mt-3">
+            <div className="flex items-center gap-2">
+              <span className="pill pill-blue">Open‑jaw</span>
+              <div className="text-sm">Return From</div>
+            </div>
+            <select className="w-full border rounded p-2 mt-1" value={retFrom} onChange={(e) => setRetFrom(e.target.value)}>
+              {destCities.filter((c) => c.name !== to).map((c) => (<option key={c.name} value={c.name}>{c.name}{c.airport?.code ? ` (${c.airport.code})` : ""}</option>))}
+            </select>
+            <div className="text-xs text-slate-500 mt-1">Recommended return city is pre‑selected based on proximity and hub presence.</div>
+            <div className="card p-3 mt-2">
+              <div className="text-sm font-medium mb-1">Ticket Preview</div>
+              <div className="text-sm">Outbound: {from} → {to}</div>
+              <div className="text-sm">Return: {retFrom || "—"} → {from}</div>
+            </div>
           </div>
         ) : tripType === "multicity" ? (
           <div className="mt-3 text-sm text-slate-600">For complex itineraries, consider the Multi‑City planner from the dashboard.</div>
@@ -56,6 +106,7 @@ export function FlightModal({ open, onClose, originCountry, destCountry }: { ope
             <select className="w-full border rounded p-2" value={tripType} onChange={(e) => setTripType(e.target.value as any)}>
               <option value="oneway">One-way</option>
               <option value="round">Round-trip</option>
+              <option value="openjaw">Open-jaw</option>
               <option value="multicity">Multi-city</option>
             </select>
           </div>
@@ -74,7 +125,6 @@ export function FlightModal({ open, onClose, originCountry, destCountry }: { ope
         </div>
         <div className="mt-3 flex gap-2">
           <button className="btn btn-primary" onClick={() => setShowConf(true)}>Search via Amadeus</button>
-          <button className="btn btn-secondary" onClick={onClose}>Close</button>
         </div>
         <div className="mt-4 grid gap-2">
           <div className="card p-3">Mock Flight A</div>
@@ -113,8 +163,18 @@ export function HotelModal({ open, onClose, destCountry }: { open: boolean; onCl
   if (!open) return null;
   return (
     <div className="fixed inset-0 bg-black/40 grid place-items-center" onClick={onClose}>
-      <div className="card w-full max-w-2xl p-4" onClick={(e) => e.stopPropagation()}>
-        <div className="text-xl font-semibold mb-2">Book Hotel</div>
+      <div className="card w-full max-w-2xl p-4 relative" onClick={(e) => e.stopPropagation()}>
+        <button 
+          className="absolute top-4 right-4 text-slate-400 hover:text-slate-600" 
+          onClick={onClose}
+          title="Close"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+        <div className="flex items-center gap-2 mb-2">
+          <div className="icon-square bg-indigo-100 text-indigo-600">🏨</div>
+          <div className="text-xl font-semibold">Book Hotel</div>
+        </div>
         <div className="grid md:grid-cols-2 gap-3">
           <div>
             <div className="text-sm mb-1">City</div>
@@ -143,7 +203,6 @@ export function HotelModal({ open, onClose, destCountry }: { open: boolean; onCl
         </div>
         <div className="mt-3 flex gap-2">
           <button className="btn btn-primary" onClick={() => setShowConf(true)}>Search Hotels</button>
-          <button className="btn btn-secondary" onClick={onClose}>Close</button>
         </div>
         {showConf ? (
           <div className="mt-4">

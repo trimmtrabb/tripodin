@@ -234,18 +234,19 @@ function CountrySelect({ options, value, onChange }: { options: string[]; value:
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [active, setActive] = useState(0);
+  const [editing, setEditing] = useState(false);
   const ref = React.useRef<HTMLDivElement>(null);
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     const list = q ? options.filter((o) => o.toLowerCase().includes(q)) : options;
     return list.slice(0, 50);
   }, [query, options]);
-  const pick = (v: string) => { onChange(v); setQuery(""); setOpen(false); };
+  const pick = (v: string) => { onChange(v); setQuery(""); setOpen(false); setEditing(false); };
   React.useEffect(() => {
     const onDown = (e: MouseEvent) => {
-      const el = ref.current; if (!el) return; if (!el.contains(e.target as Node)) setOpen(false);
+      const el = ref.current; if (!el) return; if (!el.contains(e.target as Node)) { setOpen(false); setEditing(false); }
     };
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") { setOpen(false); setEditing(false); } };
     window.addEventListener("mousedown", onDown);
     window.addEventListener("keydown", onKey);
     return () => { window.removeEventListener("mousedown", onDown); window.removeEventListener("keydown", onKey); };
@@ -254,12 +255,30 @@ function CountrySelect({ options, value, onChange }: { options: string[]; value:
     <div className="relative" ref={ref}>
       <div className="flex items-center gap-2">
         <div className="icon-square bg-blue-600 text-white">🌍</div>
-        <input className="w-full border rounded p-2" placeholder="Search or pick a country" value={value || query} onFocus={() => setOpen(true)} onChange={(e) => { setQuery(e.target.value); setOpen(true); }} onKeyDown={(e) => {
-          if (!open) return;
-          if (e.key === "ArrowDown") setActive((i) => Math.min(i + 1, filtered.length - 1));
-          else if (e.key === "ArrowUp") setActive((i) => Math.max(i - 1, 0));
-          else if (e.key === "Enter" && filtered[active]) pick(filtered[active]);
-        }} />
+        {value && !editing ? (
+          <div 
+            className="w-full border rounded p-2 bg-slate-50 cursor-pointer flex items-center justify-between group"
+            onClick={() => { setEditing(true); setQuery(value); setOpen(true); }}
+          >
+            <span>{value}</span>
+            <span className="text-xs text-slate-400 group-hover:text-blue-600">Click to edit</span>
+          </div>
+        ) : (
+          <input 
+            className="w-full border rounded p-2" 
+            placeholder="Search or pick a country" 
+            value={query} 
+            autoFocus={editing}
+            onFocus={() => setOpen(true)} 
+            onChange={(e) => { setQuery(e.target.value); setOpen(true); }} 
+            onKeyDown={(e) => {
+              if (!open) return;
+              if (e.key === "ArrowDown") setActive((i) => Math.min(i + 1, filtered.length - 1));
+              else if (e.key === "ArrowUp") setActive((i) => Math.max(i - 1, 0));
+              else if (e.key === "Enter" && filtered[active]) pick(filtered[active]);
+            }} 
+          />
+        )}
       </div>
       {open && filtered.length > 0 ? (
         <div className="absolute z-10 left-0 right-0 mt-2 card max-h-64 overflow-y-auto">
@@ -358,6 +377,17 @@ export default function App() {
   const [route, setRoute] = useState<Route>("chat");
   const [dest, setDest] = useState<string | undefined>();
   const [origin, setOrigin] = useState<string | undefined>();
+  
+  // Force cleanup of old caches on mount
+  React.useEffect(() => {
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.getRegistrations().then((regs) => {
+        regs.forEach((r) => r.unregister());
+      });
+    }
+    caches.keys().then((names) => names.forEach((n) => caches.delete(n)));
+  }, []);
+
   return (
     <div className="min-h-screen">
       <TopContext dest={dest} origin={origin} />
