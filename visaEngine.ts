@@ -82,11 +82,23 @@ export function recommendVisas(db: VisaDB, purposes: string[]): VisaOption[] {
 }
 
 export const Agreements = {
-  EU_SCHENGEN: ["Germany", "France", "Spain", "Italy", "United Kingdom"],
-  GCC: ["UAE", "Qatar", "Saudi Arabia", "Oman", "Kuwait", "Bahrain"],
-  MERCOSUR: ["Brazil", "Argentina", "Chile", "Peru", "Colombia", "Uruguay", "Paraguay", "Bolivia", "Ecuador"],
-  ASEAN: ["Thailand", "Singapore", "Vietnam", "Malaysia", "Indonesia", "Philippines", "Brunei", "Cambodia", "Laos", "Myanmar"],
-  US_VWP: ["United Kingdom", "Germany", "France", "Spain", "Italy", "Singapore", "Japan", "Australia"],
+  EU_SCHENGEN: [
+    "Austria", "Belgium", "Bulgaria", "Croatia", "Cyprus", "Czech Republic", "Denmark", "Estonia", "Finland", "France", 
+    "Germany", "Greece", "Hungary", "Ireland", "Italy", "Latvia", "Lithuania", "Luxembourg", "Malta", "Netherlands", 
+    "Poland", "Portugal", "Romania", "Slovakia", "Slovenia", "Spain", "Sweden", "Iceland", "Liechtenstein", "Norway", 
+    "Switzerland", "United Kingdom" // UK is often handled separately but for broad compatibility we can leave it or manage via CTA
+  ],
+  GCC: ["Saudi Arabia", "United Arab Emirates", "Qatar", "Oman", "Kuwait", "Bahrain", "UAE"],
+  MERCOSUR: ["Argentina", "Brazil", "Paraguay", "Uruguay", "Bolivia", "Chile", "Colombia", "Ecuador", "Peru"],
+  CARICOM: [
+    "Antigua and Barbuda", "Bahamas", "Barbados", "Belize", "Dominica", "Grenada", "Guyana", "Jamaica", 
+    "Montserrat", "Saint Kitts and Nevis", "Saint Lucia", "Saint Vincent and the Grenadines", "Trinidad and Tobago"
+  ],
+  EAC: ["Burundi", "Democratic Republic of the Congo", "Kenya", "Rwanda", "South Sudan", "Tanzania", "Uganda"],
+  CIS: ["Russia", "Belarus", "Kazakhstan", "Armenia", "Kyrgyzstan", "Uzbekistan", "Turkmenistan"],
+  ASEAN: ["Brunei", "Cambodia", "Indonesia", "Laos", "Malaysia", "Myanmar", "Philippines", "Singapore", "Thailand", "Vietnam"],
+  NORDIC: ["Denmark", "Finland", "Iceland", "Norway", "Sweden"],
+  CTA: ["United Kingdom", "Ireland"]
 };
 
 export function isVisaFree(origin: string, dest: string): boolean {
@@ -95,7 +107,16 @@ export function isVisaFree(origin: string, dest: string): boolean {
   if (Agreements.GCC.includes(origin) && Agreements.GCC.includes(dest)) return true;
   if (Agreements.MERCOSUR.includes(origin) && Agreements.MERCOSUR.includes(dest)) return true;
   if (Agreements.ASEAN.includes(origin) && Agreements.ASEAN.includes(dest)) return true;
+  if (Agreements.CARICOM.includes(origin) && Agreements.CARICOM.includes(dest)) return true;
+  if (Agreements.EAC.includes(origin) && Agreements.EAC.includes(dest)) return true;
+  if (Agreements.CIS.includes(origin) && Agreements.CIS.includes(dest)) return true;
+  if (Agreements.NORDIC.includes(origin) && Agreements.NORDIC.includes(dest)) return true;
+  if (Agreements.CTA.includes(origin) && Agreements.CTA.includes(dest)) return true;
   return false;
+}
+
+export function isSameZone(origin: string, dest: string): boolean {
+  return isVisaFree(origin, dest);
 }
 
 export async function getAllCountries(): Promise<string[]> {

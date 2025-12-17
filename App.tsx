@@ -90,6 +90,10 @@ function Chatbot({ onSetDest, onSetOrigin, user, setRoute }: { onSetDest: (c: st
   const [toCity, setToCity] = useState<string>("");
   const [upsellShown, setUpsellShown] = useState(false);
   const [showMulti, setShowMulti] = useState(false);
+  const [totalStay, setTotalStay] = useState<number>(0);
+  const [itinerary, setItinerary] = useState<string[]>([]);
+  const [transportModes, setTransportModes] = useState<Record<number, "flight" | "train" | "car">>({});
+  const [tripType, setTripType] = useState<"oneway" | "round" | "multicity">("round");
   const listRef = React.useRef<HTMLDivElement>(null);
   React.useEffect(() => {
     const el = listRef.current;
@@ -178,7 +182,7 @@ function Chatbot({ onSetDest, onSetOrigin, user, setRoute }: { onSetDest: (c: st
               {m.type === "text" ? (<div>{m.text}</div>) : null}
               {m.type === "noVisa" ? (<NoVisaBubble />) : null}
               {m.type === "selectCities" && dest && origin ? (
-                <SelectCitiesBubble originCountry={origin} destCountry={dest} onContinue={(f, t) => { setFromCity(f); setToCity(t); setCitiesSelected(true); setShowMulti(true); if (!upsellShown) { setUpsellShown(true); setMessages((mm) => [...mm, { type: "upsell" }]); } }} />
+                <SelectCitiesBubble originCountry={origin} destCountry={dest} onContinue={(f, t, d, i, tm, tt) => { setFromCity(f); setToCity(t); if(d) setTotalStay(d); if(i) setItinerary(i); if(tm) setTransportModes(tm); if(tt) setTripType(tt); setCitiesSelected(true); setShowMulti(true); if (!upsellShown) { setUpsellShown(true); setMessages((mm) => [...mm, { type: "upsell" }]); } }} />
               ) : null}
               {m.type === "info" ? (<InfoBubble title="Info" text={m.text || ""} />) : null}
               {m.type === "upsell" ? (
@@ -206,10 +210,10 @@ function Chatbot({ onSetDest, onSetOrigin, user, setRoute }: { onSetDest: (c: st
       ) : null}
       {null}
       {dest && origin ? <VisaUI origin={origin} dest={dest} /> : null}
-      <FlightModal open={showFlight} onClose={() => setShowFlight(false)} originCountry={origin || ""} destCountry={dest || ""} />
+      <FlightModal open={showFlight} onClose={() => setShowFlight(false)} originCountry={origin || ""} destCountry={dest || ""} totalStay={totalStay} fullItinerary={itinerary} />
       <HotelModal open={showHotel} onClose={() => setShowHotel(false)} destCountry={dest || ""} />
-      <InsuranceModal open={showInsurance} onClose={() => setShowInsurance(false)} originCountry={origin || ""} destCountry={dest || ""} />
-      <MultiCityModal open={showMulti} onClose={() => setShowMulti(false)} originCountry={origin || ""} destCountry={dest || ""} onSubmit={() => setShowMulti(false)} />
+      <InsuranceModal open={showInsurance} onClose={() => setShowInsurance(false)} originCountry={origin || ""} destCountry={dest || ""} totalStay={totalStay} />
+      <MultiCityModal open={showMulti} onClose={() => setShowMulti(false)} originCountry={origin || ""} destCountry={dest || ""} onSubmit={() => setShowMulti(false)} transportModes={transportModes} fullItinerary={itinerary} tripType={tripType} totalStay={totalStay} />
     </div>
   );
 }

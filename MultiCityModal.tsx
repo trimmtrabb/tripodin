@@ -1,13 +1,44 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { City, getCities, distanceKm } from "./cityData";
 
-export default function MultiCityModal({ open, onClose, originCountry, destCountry, onSubmit, tripType, dep, ret, pax }: { open: boolean; onClose: () => void; originCountry: string; destCountry: string; onSubmit?: (cities: string[]) => void; tripType?: "oneway" | "round" | "multicity"; dep?: string; ret?: string; pax?: number }) {
+export default function MultiCityModal({ open, onClose, originCountry, destCountry, onSubmit, tripType, dep, ret, pax, transportModes, fullItinerary, totalStay }: { open: boolean; onClose: () => void; originCountry: string; destCountry: string; onSubmit?: (cities: string[]) => void; tripType?: "oneway" | "round" | "multicity"; dep?: string; ret?: string; pax?: number; transportModes?: Record<number, "flight" | "train" | "car">; fullItinerary?: string[]; totalStay?: number }) {
   const originCities = useMemo(() => getCities(originCountry), [originCountry]);
   const destCities = useMemo(() => getCities(destCountry), [destCountry]);
   const [from, setFrom] = useState<string>(originCities[0]?.name || "");
   const [city1, setCity1] = useState<string>(destCities[0]?.name || "");
   const [city1Days, setCity1Days] = useState<number>(3);
   const [extra, setExtra] = useState<{ name: string; days: number }[]>([]);
+  
+  const allCitiesInOrder = useMemo(() => {
+    if (fullItinerary && fullItinerary.length >= 2) {
+      const list: City[] = [];
+      // Attempt to resolve each name in fullItinerary to a City object
+      // Try origin first, then dest
+      fullItinerary.forEach(name => {
+         let c = originCities.find(x => x.name === name);
+         if (!c) c = destCities.find(x => x.name === name);
+         if (c) list.push(c);
+         else {
+           // fallback dummy if not found in known lists (shouldn't happen if data is consistent)
+           list.push({ name, lat: 0, lng: 0, region: "Unknown", country: "Unknown" }); 
+         }
+      });
+      return list;
+    }
+    // Fallback to legacy state-based if fullItinerary not provided
+    return [];
+  }, [fullItinerary, originCities, destCities]);
+
+  useEffect(() => {
+    if (fullItinerary && fullItinerary.length >= 2) {
+      setFrom(fullItinerary[0]);
+      setCity1(fullItinerary[1]);
+      if (fullItinerary.length > 2) {
+        setExtra(fullItinerary.slice(2).map((name) => ({ name, days: 3 })));
+      }
+    }
+  }, [fullItinerary]);
+
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const ref = `MC-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
   useEffect(() => {
@@ -16,30 +47,54 @@ export default function MultiCityModal({ open, onClose, originCountry, destCount
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
   if (!open) return null;
-  const totalDays = city1Days + extra.reduce((s, e) => s + (e.days || 0), 0);
-  const allCities: City[] = [...extra.map((e) => e.name), city1].map((n) => destCities.find((c) => c.name === n)!).filter(Boolean);
-  const legs = allCities.slice(0, -1).map((c, i) => ({ from: c, to: allCities[i + 1], km: distanceKm(c, allCities[i + 1]) }));
+  
+  // Use passed totalStay if available, else sum local state
+  const computedTotalDays = totalStay !== undefined ? totalStay : (city1Days + extra.reduce((s, e) => s + (e.days || 0), 0));
+  
+  // Construct legs from fullItinerary if available
+  const legs = useMemo(() => {
+     if (allCitiesInOrder.length > 1) {
+       return allCitiesInOrder.slice(0, -1).map((c, i) => ({ 
+         from: c, 
+         to: allCitiesInOrder[i + 1], 
+         km: distanceKm(c, allCitiesInOrder[i + 1]) 
+       }));
+     }
+     // Legacy fallback
+     const all = [...extra.map((e) => e.name), city1].map((n) => destCities.find((c) => c.name === n)!).filter(Boolean);
+     // Add from city? The legacy logic seemed a bit odd in slicing.
+     // Let's just trust allCitiesInOrder for the new flow.
+     return []; 
+  }, [allCitiesInOrder, extra, city1, destCities]);
+
   const canSubmit = from && city1;
-  const routeText = [from, ...extra.map((e) => e.name).filter(Boolean), city1].filter(Boolean).join(" → ");
   const findCity = (list: City[], name: string | undefined) => list.find((c) => c.name === name);
   const fromCity = findCity(originCities as any, from);
   const firstCity = findCity(destCities as any, city1);
   const tt = tripType || "round";
   const depDate = dep || new Date().toISOString().slice(0, 10);
-  const retDate = ret || (tt === "round" ? new Date(Date.now() + 86400000).toISOString().slice(0, 10) : "");
+  
+  // Calculate return date based on total days
+  const retDate = useMemo(() => {
+    if (ret) return ret;
+    if (tt === "round" && computedTotalDays) {
+       const d = new Date(depDate);
+       d.setDate(d.getDate() + computedTotalDays);
+       return d.toISOString().slice(0, 10);
+    }
+    return tt === "round" ? new Date(Date.now() + 86400000).toISOString().slice(0, 10) : "";
+  }, [ret, tt, computedTotalDays, depDate]);
+  
   const passengers = pax || 1;
   return (
     <div className="fixed inset-0 bg-black/40 grid place-items-center" onClick={onClose}>
       <div className="bp-card w-full max-w-3xl" onClick={(e) => e.stopPropagation()}>
-        <div className={tt === "round" ? "bp-header-purple" : "bp-header-blue"}>
-          <div className="flex items-center gap-3">
-            <div className="uppercase tracking-wide">{tt === "round" ? "Round Trip Flight" : "One‑way Flight"}</div>
-            <div className="bp-code">{ref}</div>
+        <div className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-4 flex justify-between items-center shrink-0">
+          <div>
+            <div className="text-xs font-bold tracking-widest uppercase opacity-80">Round Trip Flight  {ref}</div>
+            <div className="text-lg font-mono mt-1 flex items-center gap-2">{fullItinerary ? fullItinerary.join(" → ") : `${originCountry} → ${destCountry}`}</div>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="text-sm">{routeText || `${originCountry} → ${destCountry}`}</div>
-            <button className="btn btn-secondary" onClick={onClose}>Close</button>
-          </div>
+          <button onClick={onClose} className="bg-white/20 hover:bg-white/30 text-white px-3 py-1 rounded">Close</button>
         </div>
         <div className="p-4">
           <div className="text-2xl font-bold">Confirmation</div>
@@ -54,7 +109,7 @@ export default function MultiCityModal({ open, onClose, originCountry, destCount
             <div className="md:col-span-2">
               <div className="grid md:grid-cols-2 gap-3">
                 <div>
-                  <div className="text-sm mb-1">From ({originCountry})</div>
+                  <div className="text-sm mb-1">From ({from})</div>
                   <div className="p-2 border rounded flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span>✈️</span>
@@ -62,10 +117,10 @@ export default function MultiCityModal({ open, onClose, originCountry, destCount
                     </div>
                     <div className="text-sm text-slate-500">{fromCity?.name || from}</div>
                   </div>
-                  <div className="text-xs text-slate-500 mt-1">{fromCity?.name || from} → {firstCity?.name || city1}</div>
+                  <div className="text-sm text-slate-500 mt-1">{fromCity?.name || from} → {firstCity?.name || city1}</div>
                 </div>
                 <div>
-                  <div className="text-sm mb-1">{tt === "round" ? "To & Return" : "Destination"}</div>
+                  <div className="text-sm mb-1">To ({city1})</div>
                   <div className="p-2 border rounded flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span>✈️</span>
@@ -73,7 +128,7 @@ export default function MultiCityModal({ open, onClose, originCountry, destCount
                     </div>
                     <div className="text-sm text-slate-500">{firstCity?.name || city1}</div>
                   </div>
-                  <div className="text-xs text-slate-500 mt-1">{tt === "round" ? `${firstCity?.name || city1} → ${fromCity?.name || from}` : `${firstCity?.name || city1}`}</div>
+                  <div className="text-sm text-slate-500 mt-1">{tt === "round" ? `${firstCity?.name || city1} → ${fromCity?.name || from}` : `${firstCity?.name || city1}`}</div>
                 </div>
               </div>
               <div className="mt-3">
@@ -100,19 +155,32 @@ export default function MultiCityModal({ open, onClose, originCountry, destCount
               <div className="card p-3 mt-3">
                 <div className="font-medium mb-2">Route Summary</div>
                 <div className="space-y-1">
-                  {legs.filter((l) => l.from.name !== l.to.name).map((l, idx) => (
-                    <div key={idx} className="flex justify-between"><span>{l.from.name} → {l.to.name}</span><span>{l.km} km</span></div>
-                  ))}
+                  {legs.map((l, idx) => {
+                    const mode = transportModes ? transportModes[idx] || "flight" : "flight";
+                    const icon = mode === "car" ? "🚗" : mode === "train" ? "🚆" : "✈️";
+                    const text = mode === "car" ? "by car" : mode === "train" ? "by train" : "by flight";
+                    return (
+                      <div key={idx} className="flex justify-between items-center">
+                        <div className="flex items-center gap-2">
+                          <span>{l.from.name} → {l.to.name}</span>
+                          <span className="text-xs text-slate-500 bg-slate-100 px-1 rounded flex items-center gap-1">
+                            <span>{icon}</span><span>{text}</span>
+                          </span>
+                        </div>
+                        <span>{l.km} km</span>
+                      </div>
+                    );
+                  })}
                 </div>
-                {legs.filter((l) => l.from.name !== l.to.name).length ? (
-                  <div className="mt-2 border-t pt-2 font-semibold">Total Distance {legs.filter((l) => l.from.name !== l.to.name).reduce((s, l) => s + l.km, 0)} km</div>
+                {legs.length ? (
+                  <div className="mt-2 border-t pt-2 font-semibold">Total Distance {legs.reduce((s, l) => s + l.km, 0)} km</div>
                 ) : null}
               </div>
             </div>
             <div className="card p-3">
               <div className="font-medium mb-1">Travel Details</div>
               <div className="text-xs mb-1">Type</div>
-              <div className="pill pill-blue w-fit">{tt === "oneway" ? "One‑way" : tt === "round" ? "Round‑trip" : "Multi‑city"}</div>
+              <div className="pill pill-blue w-fit">{tt === "oneway" ? "One‑way" : tt === "round" ? "Round trip" : "Multi‑city"}</div>
               <div className="grid grid-cols-2 gap-2 mt-3">
                 <div>
                   <div className="text-xs mb-1">Departure</div>
@@ -135,7 +203,7 @@ export default function MultiCityModal({ open, onClose, originCountry, destCount
               </div>
               <div className="mt-3 rounded border border-green-200 bg-green-50 p-3">
                 <div className="text-xs text-green-700">Total Fare</div>
-                <div className="text-2xl font-extrabold text-green-700">$ {(legs.filter((l) => l.from.name !== l.to.name).reduce((s, l) => s + l.km, 0) * 0.35).toFixed(0)}</div>
+                <div className="text-2xl font-extrabold text-green-700">$ {(legs.reduce((s, l) => s + l.km, 0) * 0.35).toFixed(0)}</div>
                 <div className="text-xs text-green-700 mt-1">All taxes and fees included</div>
               </div>
               <div className="mt-3 h-12 bg-white rounded overflow-hidden border">
@@ -155,7 +223,9 @@ export default function MultiCityModal({ open, onClose, originCountry, destCount
             </div>
           </div>
           <div className="mt-3">
-            <button className="btn btn-primary" disabled={!canSubmit} onClick={() => { onSubmit?.([city1, ...extra.map((e) => e.name)]); onClose(); }}>Continue to Booking Options</button>
+            <button className="btn btn-primary" disabled={!canSubmit} onClick={() => { onSubmit?.([city1, ...extra.map((e) => e.name)]); onClose(); }}>
+              Continue to Booking Options {tt === "round" ? "⇄" : "→"}
+            </button>
           </div>
         </div>
       </div>

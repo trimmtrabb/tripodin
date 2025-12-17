@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { getCities, distanceKm } from "./cityData";
 import { RoundTripConfirmation, HotelConfirmation, OpenJawConfirmation } from "./Confirmations";
 
-export function FlightModal({ open, onClose, originCountry, destCountry }: { open: boolean; onClose: () => void; originCountry: string; destCountry: string }) {
+export function FlightModal({ open, onClose, originCountry, destCountry, totalStay, fullItinerary }: { open: boolean; onClose: () => void; originCountry: string; destCountry: string; totalStay?: number; fullItinerary?: string[] }) {
   const originCities = useMemo(() => getCities(originCountry), [originCountry]);
   const destCities = useMemo(() => getCities(destCountry), [destCountry]);
   const [from, setFrom] = useState<string>(originCities[0]?.name || "");
@@ -10,9 +10,16 @@ export function FlightModal({ open, onClose, originCountry, destCountry }: { ope
   const [retFrom, setRetFrom] = useState<string>("");
   const [tripType, setTripType] = useState<"oneway" | "round" | "openjaw" | "multicity">("round");
   const [dep, setDep] = useState<string>(() => new Date().toISOString().slice(0, 10));
-  const [ret, setRet] = useState<string>(() => new Date(Date.now() + 86400000).toISOString().slice(0, 10));
+  const [ret, setRet] = useState<string>(() => new Date(Date.now() + (totalStay ? totalStay * 86400000 : 86400000)).toISOString().slice(0, 10));
   const [pax, setPax] = useState<number>(2);
   const [showConf, setShowConf] = useState(false);
+  useEffect(() => {
+    if (totalStay) {
+      const d = new Date(dep);
+      d.setDate(d.getDate() + totalStay);
+      setRet(d.toISOString().slice(0, 10));
+    }
+  }, [totalStay, dep]);
   useEffect(() => {
     if (tripType === "openjaw") {
       const o = originCities.find((c) => c.name === from);
@@ -52,7 +59,21 @@ export function FlightModal({ open, onClose, originCountry, destCountry }: { ope
           <div className="icon-square bg-blue-100 text-blue-600">✈️</div>
           <div className="text-xl font-semibold">Book Flight</div>
         </div>
-        <div className="text-sm text-slate-600 mb-3">{from} ⇄ {to}</div>
+        <div className="text-sm text-slate-600 mb-3">
+          {fullItinerary && fullItinerary.length > 0 ? (
+            <div className="flex flex-wrap gap-1 items-center">
+              {fullItinerary.map((city, i) => (
+                <React.Fragment key={i}>
+                  <span className="font-medium">{city}</span>
+                  {i < fullItinerary.length - 1 && <span className="text-slate-400">→</span>}
+                </React.Fragment>
+              ))}
+            </div>
+          ) : (
+            <>{from} ⇄ {to}</>
+          )}
+          {totalStay ? <div className="text-xs text-slate-500 mt-1">Total Trip Duration: {totalStay} days</div> : null}
+        </div>
         <div className="grid md:grid-cols-2 gap-3">
           <div>
             <div className="text-sm mb-1">From</div>
@@ -214,13 +235,13 @@ export function HotelModal({ open, onClose, destCountry }: { open: boolean; onCl
   );
 }
 
-export function InsuranceModal({ open, onClose, originCountry, destCountry }: { open: boolean; onClose: () => void; originCountry: string; destCountry: string }) {
+export function InsuranceModal({ open, onClose, originCountry, destCountry, totalStay }: { open: boolean; onClose: () => void; originCountry: string; destCountry: string; totalStay?: number }) {
   const [name, setName] = useState("");
   const [dob, setDob] = useState("");
   const [nationality, setNationality] = useState(originCountry);
   const [destination, setDestination] = useState(destCountry);
   const [dep, setDep] = useState<string>(() => new Date().toISOString().slice(0, 10));
-  const [ret, setRet] = useState<string>(() => new Date(Date.now() + 86400000).toISOString().slice(0, 10));
+  const [ret, setRet] = useState<string>(() => new Date(Date.now() + (totalStay ? totalStay * 86400000 : 86400000)).toISOString().slice(0, 10));
   const [level, setLevel] = useState("Standard");
   const [amount, setAmount] = useState("50000");
   const [addons, setAddons] = useState<string[]>([]);
@@ -231,6 +252,13 @@ export function InsuranceModal({ open, onClose, originCountry, destCountry }: { 
     const r = new Date(ret).getTime();
     return Math.max(1, Math.round((r - d) / 86400000));
   }, [dep, ret]);
+  useEffect(() => {
+    if (totalStay) {
+      const d = new Date(dep);
+      d.setDate(d.getDate() + totalStay);
+      setRet(d.toISOString().slice(0, 10));
+    }
+  }, [totalStay, dep]);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
     window.addEventListener("keydown", onKey);

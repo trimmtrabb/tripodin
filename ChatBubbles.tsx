@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from "react";
-import { getCities } from "./cityData";
+import { getCities, distanceKm } from "./cityData";
+import { isSameZone } from "./visaEngine";
 
 export function NoVisaBubble() {
   return (
@@ -13,7 +14,7 @@ export function NoVisaBubble() {
   );
 }
 
-export function SelectCitiesBubble({ originCountry, destCountry, onContinue }: { originCountry: string; destCountry: string; onContinue: (from: string, to: string) => void }) {
+export function SelectCitiesBubble({ originCountry, destCountry, onContinue }: { originCountry: string; destCountry: string; onContinue: (from: string, to: string, days: number, itinerary: string[], transportModes: Record<number, "flight" | "train" | "car">, tripType: "oneway" | "round" | "multicity") => void }) {
   const originCities = useMemo(() => getCities(originCountry), [originCountry]);
   const destCities = useMemo(() => getCities(destCountry), [destCountry]);
   const [tab, setTab] = useState<"direct" | "multi">("direct");
@@ -51,10 +52,67 @@ export function SelectCitiesBubble({ originCountry, destCountry, onContinue }: {
   const label = from && to ? `Continue with ${from} → ${to}` : "Continue";
   const mLabel = start && first ? `Plan Multi‑city with ${start} → ${first}` : "Continue";
   const names = React.useMemo(() => [start, first, ...extra].filter(Boolean), [start, first, extra]);
+  const pairsRef = React.useRef<[string, string][]>([]);
   const find = (name: string) => {
     const all = [...originCities, ...destCities];
     return all.find((c) => c.name === name);
   };
+  const getMode = (idx: number, from: string, to: string) => {
+    if (transportModes[idx]) return transportModes[idx];
+    const A = find(from);
+    const B = find(to);
+    if (!A || !B) return "flight";
+
+    const countryA = originCities.some(c => c.name === A.name) ? originCountry : (destCities.some(c => c.name === A.name) ? destCountry : "");
+    const countryB = originCities.some(c => c.name === B.name) ? originCountry : (destCities.some(c => c.name === B.name) ? destCountry : "");
+
+    if (countryA && countryB && countryA === countryB) return "train"; // Internal default
+
+    if (countryA && countryB && isSameZone(countryA, countryB)) {
+        const d = distanceKm(A, B);
+        // User feedback: Car is preferred for short trips (40-50% share vs 10% train)
+        return d <= 800 ? "car" : "flight";
+    }
+
+    return "flight";
+  };
+  React.useEffect(() => {
+    setTransportModes((prev) => {
+      const next = { ...prev };
+      delete next[0];
+      return next;
+    });
+  }, [start, first]);
+  React.useEffect(() => {
+    const forward = names;
+    const back = planReturn && finalCity ? (returnStops.length ? [finalCity, ...returnStops, finalCity, start] : [finalCity, start]) : [];
+    const fullSeq = [...forward, ...back];
+    const currPairs: [string, string][] = [];
+    for (let i = 0; i < fullSeq.length - 1; i++) {
+      const a = fullSeq[i];
+      const b = fullSeq[i + 1];
+      if (!a || !b) continue;
+      currPairs.push([a, b]);
+    }
+    const prevPairs = pairsRef.current;
+    if (!prevPairs.length) {
+      pairsRef.current = currPairs;
+      return;
+    }
+    setTransportModes((prev) => {
+      const next = { ...prev };
+      Object.keys(next).forEach((k) => {
+        const idx = Number(k);
+        const p = prevPairs[idx];
+        const c = currPairs[idx];
+        if (!c || !p || p[0] !== c[0] || p[1] !== c[1]) {
+          delete next[idx];
+        }
+      });
+      return next;
+    });
+    pairsRef.current = currPairs;
+  }, [names, finalCity, returnStops, planReturn, start]);
   const distKm = React.useMemo(() => {
     const fIdx = finalCity ? names.findIndex((n) => n === finalCity) : -1;
     // Don't truncate forward path based on finalCity - allow the full route to be traversed
@@ -221,17 +279,12 @@ export function SelectCitiesBubble({ originCountry, destCountry, onContinue }: {
      if (points.length < 2) return [];
      
      const segs: { d: string; mode: "flight" | "train" | "car"; mx: number; my: number; angle: number }[] = [];
-     for (let i = 0; i < points.length - 1; i++) {
-       const p = points[i];
-       const q = points[i + 1];
-       // Default leg 0 is flight. 
-       // If it's the last leg (return to start), default to flight.
-       // Otherwise default to car.
-       const isLast = i === points.length - 2;
-       const defaultMode = (i === 0 || isLast) ? "flight" : "car";
-       const mode = transportModes[i] || defaultMode;
- 
-       const mx = (p.x + q.x) / 2;
+    for (let i = 0; i < points.length - 1; i++) {
+      const p = points[i];
+      const q = points[i + 1];
+      const mode = getMode(i, p.name, q.name);
+
+      const mx = (p.x + q.x) / 2;
        const my = (p.y + q.y) / 2;
        const dx = q.x - p.x;
        const dy = q.y - p.y;
@@ -343,7 +396,7 @@ export function SelectCitiesBubble({ originCountry, destCountry, onContinue }: {
               </select>
             </div>
           </div>
-          <button className="btn btn-primary btn-lg mt-3" onClick={() => onContinue(from, to)}>{label}</button>
+          <button className="btn btn-primary btn-lg mt-3" onClick={() => onContinue(from, to, 3, [from, to], {}, "oneway")}>{label}</button>
         </div>
       ) : (
         <div>
@@ -364,17 +417,17 @@ export function SelectCitiesBubble({ originCountry, destCountry, onContinue }: {
                 </select>
                 <div className="flex bg-slate-100 rounded p-1 gap-1 shrink-0">
                   <button
-                    className={`p-1 rounded text-xs ${(!transportModes[0] || transportModes[0] === "flight") ? "bg-white shadow text-blue-600" : "text-slate-400 hover:text-slate-600"}`}
+                    className={`p-1 rounded text-xs ${(getMode(0, start, first) === "flight") ? "bg-white shadow text-blue-600" : "text-slate-400 hover:text-slate-600"}`}
                     onClick={() => setTransportModes((prev) => ({ ...prev, 0: "flight" }))}
                     title="Travel by Flight"
                   >✈️</button>
                   <button
-                    className={`p-1 rounded text-xs ${(transportModes[0] === "train") ? "bg-white shadow text-amber-600" : "text-slate-400 hover:text-slate-600"}`}
+                    className={`p-1 rounded text-xs ${(getMode(0, start, first) === "train") ? "bg-white shadow text-amber-600" : "text-slate-400 hover:text-slate-600"}`}
                     onClick={() => setTransportModes((prev) => ({ ...prev, 0: "train" }))}
                     title="Travel by Train"
                   >🚆</button>
                   <button
-                    className={`p-1 rounded text-xs ${(transportModes[0] === "car") ? "bg-white shadow text-blue-800" : "text-slate-400 hover:text-slate-600"}`}
+                    className={`p-1 rounded text-xs ${(getMode(0, start, first) === "car") ? "bg-white shadow text-blue-800" : "text-slate-400 hover:text-slate-600"}`}
                     onClick={() => setTransportModes((prev) => ({ ...prev, 0: "car" }))}
                     title="Travel by Car"
                   >🚗</button>
@@ -504,17 +557,17 @@ export function SelectCitiesBubble({ originCountry, destCountry, onContinue }: {
                 </datalist>
                 <div className="flex bg-slate-100 rounded p-1 gap-1 shrink-0">
                   <button
-                    className={`p-1 rounded text-xs ${(transportModes[idx + 1] === "flight") ? "bg-white shadow text-blue-600" : "text-slate-400 hover:text-slate-600"}`}
+                    className={`p-1 rounded text-xs ${(getMode(idx + 1, idx === 0 ? first : extra[idx - 1], city) === "flight") ? "bg-white shadow text-blue-600" : "text-slate-400 hover:text-slate-600"}`}
                     onClick={() => setTransportModes((prev) => ({ ...prev, [idx + 1]: "flight" }))}
                     title="Travel by Flight"
                   >✈️</button>
                   <button
-                    className={`p-1 rounded text-xs ${(transportModes[idx + 1] === "train") ? "bg-white shadow text-amber-600" : "text-slate-400 hover:text-slate-600"}`}
+                    className={`p-1 rounded text-xs ${(getMode(idx + 1, idx === 0 ? first : extra[idx - 1], city) === "train") ? "bg-white shadow text-amber-600" : "text-slate-400 hover:text-slate-600"}`}
                     onClick={() => setTransportModes((prev) => ({ ...prev, [idx + 1]: "train" }))}
                     title="Travel by Train"
                   >🚆</button>
                   <button
-                    className={`p-1 rounded text-xs ${(!transportModes[idx + 1] || transportModes[idx + 1] === "car") ? "bg-white shadow text-blue-800" : "text-slate-400 hover:text-slate-600"}`}
+                    className={`p-1 rounded text-xs ${(getMode(idx + 1, idx === 0 ? first : extra[idx - 1], city) === "car") ? "bg-white shadow text-blue-800" : "text-slate-400 hover:text-slate-600"}`}
                     onClick={() => setTransportModes((prev) => ({ ...prev, [idx + 1]: "car" }))}
                     title="Travel by Car"
                   >🚗</button>
@@ -589,17 +642,19 @@ export function SelectCitiesBubble({ originCountry, destCountry, onContinue }: {
                 setExtraFilter((arr) => arr.length < maxCities - 2 ? [...arr, ""] : arr);
               }}
             >+ Add more cities ✨</button>
-            <button
-              className="btn btn-secondary"
-              title={planReturn ? (finalCity ? "Add a stop on the return route" : "Choose a Final city first") : "Enable return flight first"}
-              disabled={!planReturn || !finalCity}
-              aria-disabled={!planReturn || !finalCity}
-              onClick={() => {
-                if (!planReturn || !finalCity) return;
-                setReturnStops((arr) => [...arr, ""]);
-                setReturnFilters((arr) => [...arr, ""]);
-              }}
-            >+ Add return stop ↩︎</button>
+            {planReturn ? (
+              <button
+                className="btn btn-secondary"
+                title={finalCity ? "Add a stop on the return route" : "Choose a Final city first"}
+                disabled={!finalCity}
+                aria-disabled={!finalCity}
+                onClick={() => {
+                  if (!finalCity) return;
+                  setReturnStops((arr) => [...arr, ""]);
+                  setReturnFilters((arr) => [...arr, ""]);
+                }}
+              >+ Add return stop ↩︎</button>
+            ) : null}
             <button
               className={`pill ${planReturn ? "pill-blue" : ""}`}
               onClick={() => {
@@ -705,17 +760,17 @@ export function SelectCitiesBubble({ originCountry, destCountry, onContinue }: {
                 )}
                 <div className="flex bg-slate-100 rounded p-1 gap-1 shrink-0">
                   <button
-                    className={`p-1 rounded text-xs ${(!transportModes[transportIdx] || transportModes[transportIdx] === "flight") ? "bg-white shadow text-blue-600" : "text-slate-400 hover:text-slate-600"}`}
+                    className={`p-1 rounded text-xs ${(getMode(transportIdx, idx === 0 ? finalCity : returnStops[idx - 1], city) === "flight") ? "bg-white shadow text-blue-600" : "text-slate-400 hover:text-slate-600"}`}
                     onClick={() => setTransportModes((prev) => ({ ...prev, [transportIdx]: "flight" }))}
                     title="Travel by Flight"
                   >✈️</button>
                   <button
-                    className={`p-1 rounded text-xs ${(transportModes[transportIdx] === "train") ? "bg-white shadow text-amber-600" : "text-slate-400 hover:text-slate-600"}`}
+                    className={`p-1 rounded text-xs ${(getMode(transportIdx, idx === 0 ? finalCity : returnStops[idx - 1], city) === "train") ? "bg-white shadow text-amber-600" : "text-slate-400 hover:text-slate-600"}`}
                     onClick={() => setTransportModes((prev) => ({ ...prev, [transportIdx]: "train" }))}
                     title="Travel by Train"
                   >🚆</button>
                   <button
-                    className={`p-1 rounded text-xs ${(transportModes[transportIdx] === "car") ? "bg-white shadow text-blue-800" : "text-slate-400 hover:text-slate-600"}`}
+                    className={`p-1 rounded text-xs ${(getMode(transportIdx, idx === 0 ? finalCity : returnStops[idx - 1], city) === "car") ? "bg-white shadow text-blue-800" : "text-slate-400 hover:text-slate-600"}`}
                     onClick={() => setTransportModes((prev) => ({ ...prev, [transportIdx]: "car" }))}
                     title="Travel by Car"
                   >🚗</button>
@@ -757,9 +812,8 @@ export function SelectCitiesBubble({ originCountry, destCountry, onContinue }: {
                   km = 2 * R * Math.asin(Math.sqrt(h));
                 }
                 
-                const isLast = i === points.length - 2;
-                const defaultMode = (i === 0 || isLast) ? "flight" : "car";
-                const mode = transportModes[i] || defaultMode;
+                const isInternal = destCities.some(c => c.name === p.name) && destCities.some(c => c.name === q.name);
+                const mode = getMode(i, p.name, q.name);
                 const icon = mode === "flight" ? "✈️" : (mode === "train" ? "🚆" : "🚗");
                 
                 return (
@@ -1001,7 +1055,26 @@ export function SelectCitiesBubble({ originCountry, destCountry, onContinue }: {
               </div>
             ) : null}
           </div>
-          <button className="btn btn-primary btn-lg mt-3" onClick={() => onContinue(start, first)}>{mLabel}</button>
+          <button className="btn btn-primary btn-lg mt-3" onClick={() => {
+            const totalDays = firstDays + extraDays.reduce((s, d) => s + (d || 0), 0);
+            const itinerary = points.map((p) => p.name);
+            const finalModes: { [key: number]: "flight" | "train" | "car" } = {};
+            for (let i = 0; i < points.length - 1; i++) {
+              if (transportModes[i]) {
+                finalModes[i] = transportModes[i];
+              } else {
+                 const p = points[i]; const q = points[i+1];
+                 finalModes[i] = getMode(i, p.name, q.name);
+              }
+            }
+            onContinue(start, first, totalDays, itinerary, finalModes, planReturn ? "round" : "oneway");
+          }}>
+            {planReturn ? (
+              <>Plan Round Trip with {start} ⇄ {first}</>
+            ) : (
+              <>Plan One-way with {start} → {first}</>
+            )}
+          </button>
         </div>
       )}
     </div>
