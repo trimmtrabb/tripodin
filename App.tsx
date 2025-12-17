@@ -26,7 +26,7 @@ function useAuth() {
   return { user, login, logout };
 }
 
-function Header({ user, onLogin, onLogout, route, setRoute }: { user: User; onLogin: (u: User) => void; onLogout: () => void; route: Route; setRoute: (r: Route) => void }) {
+function Header({ user, onLogin, onLogout, route, setRoute, onNewChat }: { user: User; onLogin: (u: User) => void; onLogout: () => void; route: Route; setRoute: (r: Route) => void; onNewChat: () => void }) {
   const [lang, setLang] = useState("en");
   return (
     <div className="gradient-header border-b border-slate-200">
@@ -42,7 +42,7 @@ function Header({ user, onLogin, onLogout, route, setRoute }: { user: User; onLo
             <option value="fr">FR</option>
             <option value="es">ES</option>
           </select>
-          <button className="btn btn-secondary" onClick={() => setRoute("chat")}>New chat</button>
+          <button className="btn btn-secondary" onClick={onNewChat}>New chat</button>
           {!user ? (
             <>
               <button className="btn btn-secondary" onClick={() => onLogin({ id: crypto.randomUUID(), username: "demo", email: "demo@example.com" })}>Log in</button>
@@ -381,6 +381,14 @@ export default function App() {
   const [route, setRoute] = useState<Route>("chat");
   const [dest, setDest] = useState<string | undefined>();
   const [origin, setOrigin] = useState<string | undefined>();
+  const [chatKey, setChatKey] = useState(0);
+
+  const handleNewChat = () => {
+    setOrigin(undefined);
+    setDest(undefined);
+    setRoute("chat");
+    setChatKey((k) => k + 1);
+  };
   
   // Force cleanup of old caches on mount
   React.useEffect(() => {
@@ -403,9 +411,9 @@ export default function App() {
   return (
     <div className="min-h-screen">
       <TopContext dest={dest} origin={origin} />
-      <Header user={user} onLogin={login} onLogout={logout} route={route} setRoute={setRoute} />
+      <Header user={user} onLogin={login} onLogout={logout} route={route} setRoute={setRoute} onNewChat={handleNewChat} />
       {route === "chat" ? (
-        <Chatbot onSetDest={setDest} onSetOrigin={setOrigin} user={user} setRoute={setRoute} />
+        <Chatbot key={chatKey} onSetDest={setDest} onSetOrigin={setOrigin} user={user} setRoute={setRoute} />
       ) : (
         <Dashboard origin={origin} dest={dest} onReset={handleReset} />
       )}
