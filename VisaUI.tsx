@@ -55,6 +55,7 @@ export default function VisaUI({ origin, dest }: { origin: string; dest: string 
                   <div className="font-semibold">{v.name}</div>
                 </div>
                 <div className="text-sm text-slate-600">Fee {v.fee} · Processing {v.processing} · Validity {v.validity}</div>
+                {v.description ? <div className="text-xs text-slate-500 mt-1 italic">{v.description}</div> : null}
                 <div className="mt-2 text-sm">{v.mappedCategories.join(", ")}</div>
               </div>
             );

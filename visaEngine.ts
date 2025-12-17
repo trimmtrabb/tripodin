@@ -1,3 +1,5 @@
+import { GENERATED_VISA_DATA } from "./visaDataGenerated";
+
 export type VisaOption = {
   name: string;
   fee: string;
@@ -6,99 +8,99 @@ export type VisaOption = {
   mappedCategories: string[];
   documents: Record<string, string[]>;
   sourceCountry?: string;
+  country?: string; // Destination country
+  description?: string;
 };
 
 export type VisaDB = VisaOption[];
 
 export async function loadVisaData(): Promise<VisaDB> {
-  try {
-    const resp = await fetch("/Final_Mapped_Visa_Options.csv");
-    const text = await resp.text();
-    const lines = text.split(/\r?\n/).filter((l) => l.trim().length);
-    const header = lines[0].split(",");
-    const nameIdx = header.findIndex((h) => /visa/i.test(h));
-    const feeIdx = header.findIndex((h) => /fee/i.test(h));
-    const procIdx = header.findIndex((h) => /process/i.test(h));
-    const valIdx = header.findIndex((h) => /valid/i.test(h));
-    const catIdx = header.findIndex((h) => /mappedCategories/i.test(h));
-    const srcIdx = header.findIndex((h) => /source_country/i.test(h));
-    const db: VisaDB = lines.slice(1).map((l) => {
-      const cols = l.split(",");
-      const cats = (cols[catIdx] || "").split("|").map((x) => x.trim()).filter(Boolean);
-      return {
-        name: cols[nameIdx] || "",
-        fee: cols[feeIdx] || "",
-        processing: cols[procIdx] || "",
-        validity: cols[valIdx] || "",
-        mappedCategories: cats,
-        documents: {
-          Basic: ["Passport", "Photos", "Application form"],
-          Financial: ["Bank statements", "Employment letters"],
-          Purpose: ["Hotel bookings", "Invitation letters", "Enrollment letters"],
-          Supporting: ["Travel insurance", "Itinerary", "Proof of ties"],
-        },
-        sourceCountry: cols[srcIdx] || undefined,
-      } as VisaOption;
-    });
-    return db;
-  } catch {
-    return [
-      {
-        name: "Tourist Visa",
-        fee: "$80",
-        processing: "5-10 days",
-        validity: "90 days",
-        mappedCategories: ["Leisure & Tourism", "Culture & History"],
-        documents: {
-          Basic: ["Passport", "Photos", "Application form"],
-          Financial: ["Bank statements"],
-          Purpose: ["Hotel bookings"],
-          Supporting: ["Travel insurance", "Itinerary"],
-        },
-      },
-      {
-        name: "Business Visa",
-        fee: "$120",
-        processing: "7-14 days",
-        validity: "180 days",
-        mappedCategories: ["Business Travel"],
-        documents: {
-          Basic: ["Passport", "Photos", "Application form"],
-          Financial: ["Bank statements", "Employment letters"],
-          Purpose: ["Invitation letters"],
-          Supporting: ["Travel insurance", "Itinerary"],
-        },
-      },
-    ];
-  }
+  // Use the generated data from the 26 files
+  return GENERATED_VISA_DATA as VisaDB;
 }
 
 export function recommendVisas(db: VisaDB, purposes: string[], destCountry: string): VisaOption[] {
+  const normalize = (c: string) => {
+    const lower = c.toLowerCase().trim();
+    if (lower === "uk" || lower === "united kingdom") return "united kingdom";
+    if (lower === "usa" || lower === "us" || lower === "united states") return "united states";
+    if (lower === "uae" || lower === "united arab emirates") return "united arab emirates";
+    return lower;
+  };
+
+  const target = normalize(destCountry);
+
   const filtered = db.filter((v) => {
-    // If visa data has a source country, it implies destination is implicitly handled or it's a specific route.
-    // However, the issue is that we need to ensure the visa is FOR the destination country.
-    // Looking at loadVisaData, we don't seem to parse 'destination_country' from CSV explicitly into the object, 
-    // or maybe the 'name' contains it.
-    // Let's assume the current CSV structure might not be perfect, but let's try to filter by name or implicit rules.
+    // If the visa entry has a specific destination country (from our new data source)
+    if (v.country) {
+        const vTarget = normalize(v.country);
+        if (vTarget === target) return true;
+        // If strict match fails, we exclude it because this DB is partitioned by country.
+        return false;
+    }
     
+    // Fallback for legacy data without country field (if any mixed in)
     // Quick fix: If the visa name contains "Schengen" but destination is NOT a Schengen country, filter it out.
-    const isDestSchengen = Agreements.EU_SCHENGEN.includes(destCountry);
+    const isDestSchengen = Agreements.EU_SCHENGEN.map(normalize).includes(target);
     if (/schengen/i.test(v.name) && !isDestSchengen) return false;
 
-    // If destination is USA, we expect "US" or "USA" or "United States" in visa name or it should be a standard US visa type like B1/B2
-    if (destCountry === "United States" || destCountry === "USA") {
+    if (target === "united states") {
          if (/schengen/i.test(v.name)) return false;
-         // If we had more metadata we could be stricter.
     }
 
     return true;
   });
 
-  const score = (v: VisaOption) => {
-    const match = purposes.filter((p) => v.mappedCategories.includes(p)).length;
-    return match;
+  // If no purposes selected, show all available visas for this country
+  if (purposes.length === 0) return filtered;
+
+  const PURPOSE_KEYWORDS: Record<string, string[]> = {
+    "Leisure & Tourism": ["touris", "visit", "holiday", "vacation", "leisure", "sightseeing", "b-2", "b-1/b-2", "travel"],
+    "Business Travel": ["business", "conference", "meeting", "commercial", "trade", "b-1", "investor", "entrepreneur", "corporate"],
+    "Educational & Study": ["student", "study", "education", "academic", "vocational", "f-1", "m-1", "j-1", "research", "intern", "training", "exchange"],
+    "Medical & Wellness": ["medical", "treatment", "health", "patient"],
+    "Family & Friends": ["family", "spouse", "child", "relative", "reunion", "marriage", "fiancé", "partner", "dependant"],
+    "Religious & Spiritual": ["religious", "missionary", "pilgrimage", "r-1"],
+    "Adventure & Sports": ["sport", "athlete", "competition", "p-1", "adventure"],
+    "Culture & History": ["cultur", "art", "perform", "o-1", "p-1", "history"],
+    // Default fallbacks for generic tourism
+    "Food & Dining": ["touris", "visit", "holiday"],
+    "Shopping & Markets": ["touris", "visit", "shopping"],
   };
-  return filtered.sort((a, b) => score(b) - score(a));
+
+  const score = (v: VisaOption) => {
+    let matchCount = 0;
+    
+    // Collect all keywords for selected purposes
+    const keywords = purposes.flatMap(p => PURPOSE_KEYWORDS[p] || []);
+    
+    if (keywords.length === 0) return 0;
+
+    const searchableText = [
+      v.name,
+      ...(v.mappedCategories || []),
+      v.description || "",
+      v.country || ""
+    ].join(" ").toLowerCase();
+
+    // Check if ANY keyword matches
+    const hasMatch = keywords.some(k => searchableText.includes(k.toLowerCase()));
+    
+    if (hasMatch) {
+      matchCount = 10; // Base score for match
+      // Bonus for exact category matches or multiple keyword hits could be added here
+      keywords.forEach(k => {
+        if (searchableText.includes(k.toLowerCase())) matchCount++;
+      });
+    }
+
+    return matchCount;
+  };
+  
+  // Filter out options with 0 score (no relevance to selected purposes)
+  const relevant = filtered.filter(v => score(v) > 0);
+  
+  return relevant.sort((a, b) => score(b) - score(a));
 }
 
 export const Agreements = {
@@ -186,5 +188,6 @@ export async function getAllCountries(): Promise<string[]> {
   }
   Object.values(Agreements).flat().forEach((c) => set.add(c));
   ["United States", "United Kingdom", "UAE", "China", "India", "Germany", "France", "Italy", "Spain", "Mexico", "Canada", "Australia", "Japan"].forEach((c) => set.add(c));
+  GENERATED_VISA_DATA.forEach((v: any) => { if (v.country) set.add(v.country); });
   return Array.from(set).sort((a, b) => a.localeCompare(b));
 }
