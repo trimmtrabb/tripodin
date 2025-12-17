@@ -243,7 +243,7 @@ function CountrySelect({ options, value, onChange }: { options: string[]; value:
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     const list = q ? options.filter((o) => o.toLowerCase().includes(q)) : options;
-    return list.slice(0, 50);
+    return list.slice(0, 300);
   }, [query, options]);
   const pick = (v: string) => { onChange(v); setQuery(""); setOpen(false); setEditing(false); };
   React.useEffect(() => {
