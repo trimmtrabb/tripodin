@@ -46,7 +46,6 @@ export default function MultiCityModal({ open, onClose, originCountry, destCount
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
-  if (!open) return null;
   
   // Use passed totalStay if available, else sum local state
   const computedTotalDays = totalStay !== undefined ? totalStay : (city1Days + extra.reduce((s, e) => s + (e.days || 0), 0));
@@ -86,6 +85,9 @@ export default function MultiCityModal({ open, onClose, originCountry, destCount
   }, [ret, tt, computedTotalDays, depDate]);
   
   const passengers = pax || 1;
+
+  if (!open) return null;
+
   return (
     <div className="fixed inset-0 bg-black/40 grid place-items-center" onClick={onClose}>
       <div className="bp-card w-full max-w-3xl" onClick={(e) => e.stopPropagation()}>
@@ -202,9 +204,13 @@ export default function MultiCityModal({ open, onClose, originCountry, destCount
                 </div>
               </div>
               <div className="mt-3 rounded border border-green-200 bg-green-50 p-3">
-                <div className="text-xs text-green-700">Total Fare</div>
-                <div className="text-2xl font-extrabold text-green-700">$ {(legs.reduce((s, l) => s + l.km, 0) * 0.35).toFixed(0)}</div>
-                <div className="text-xs text-green-700 mt-1">All taxes and fees included</div>
+                <div className="text-xs text-green-700">Estimated Cost</div>
+                <div className="text-2xl font-extrabold text-green-700">$ {(legs.reduce((s, l, idx) => {
+                  const mode = transportModes ? transportModes[idx] || "flight" : "flight";
+                  const rate = mode === "car" ? 0.15 : (mode === "train" ? 0.22 : 0.35);
+                  return s + (l.km * rate);
+                }, 0)).toFixed(0)}</div>
+                <div className="text-xs text-green-700 mt-1">Includes travel & taxes</div>
               </div>
               <div className="mt-3 h-12 bg-white rounded overflow-hidden border">
                 <div className="h-full w-full flex">

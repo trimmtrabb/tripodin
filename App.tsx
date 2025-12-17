@@ -295,7 +295,7 @@ function CountrySelect({ options, value, onChange }: { options: string[]; value:
   );
 }
 
-function Dashboard({ origin, dest }: { origin?: string; dest?: string }) {
+function Dashboard({ origin, dest, onReset }: { origin?: string; dest?: string; onReset: () => void }) {
   const [tab, setTab] = useState<"overview" | "trips" | "documents" | "profile">("overview");
   const [flightOpen, setFlightOpen] = useState(false);
   const [hotelOpen, setHotelOpen] = useState(false);
@@ -359,8 +359,8 @@ function Dashboard({ origin, dest }: { origin?: string; dest?: string }) {
                 a.href = url; a.download = "tripodin-profile.json"; a.click();
                 URL.revokeObjectURL(url);
               }}>Export Data</button>
-              <button className="btn btn-secondary" onClick={() => { localStorage.clear(); location.reload(); }}>Reset Profile</button>
-              <button className="btn btn-secondary" onClick={() => { localStorage.clear(); alert("Account deleted"); }}>Delete Account</button>
+              <button className="btn btn-secondary" onClick={onReset}>Reset Profile</button>
+              <button className="btn btn-secondary" onClick={() => { alert("Account deleted"); onReset(); }}>Delete Account</button>
             </div>
           </div>
         )}
@@ -392,6 +392,14 @@ export default function App() {
     caches.keys().then((names) => names.forEach((n) => caches.delete(n)));
   }, []);
 
+  const handleReset = () => {
+    localStorage.clear();
+    logout();
+    setOrigin(undefined);
+    setDest(undefined);
+    setRoute("chat");
+  };
+
   return (
     <div className="min-h-screen">
       <TopContext dest={dest} origin={origin} />
@@ -399,7 +407,7 @@ export default function App() {
       {route === "chat" ? (
         <Chatbot onSetDest={setDest} onSetOrigin={setOrigin} user={user} setRoute={setRoute} />
       ) : (
-        <Dashboard origin={origin} dest={dest} />
+        <Dashboard origin={origin} dest={dest} onReset={handleReset} />
       )}
     </div>
   );

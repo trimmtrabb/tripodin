@@ -898,10 +898,10 @@ export function SelectCitiesBubble({ originCountry, destCountry, onContinue }: {
                   <text x="8" y="136" fontSize="8" textAnchor="start" fill="#64748b">© OpenStreetMap contributors</text>
                  <defs>
                    <filter id="dotShadow" x="-20%" y="-20%" width="140%" height="140%">
-                     <feDropShadow dx="0" dy="1" stdDeviation="1.2" flood-color="#0f172a" flood-opacity="0.18" />
+                     <feDropShadow dx="0" dy="1" stdDeviation="1.2" floodColor="#0f172a" floodOpacity="0.18" />
                    </filter>
                    <filter id="routeShadow" x="-20%" y="-20%" width="140%" height="140%">
-                     <feDropShadow dx="0" dy="1.2" stdDeviation="1.5" flood-color="#1e3a8a" flood-opacity="0.18" />
+                     <feDropShadow dx="0" dy="1.2" stdDeviation="1.5" floodColor="#1e3a8a" floodOpacity="0.18" />
                    </filter>
                    <marker id="arrowHead" viewBox="0 0 8 8" refX="6" refY="4" markerWidth="4.5" markerHeight="4.5" orient="auto">
                      <path d="M 0 1 L 6 4 L 0 7 L 2.2 4 z" fill="#1d4ed8" stroke="#ffffff" strokeWidth="0.6" />

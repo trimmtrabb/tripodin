@@ -73,12 +73,32 @@ export async function loadVisaData(): Promise<VisaDB> {
   }
 }
 
-export function recommendVisas(db: VisaDB, purposes: string[]): VisaOption[] {
+export function recommendVisas(db: VisaDB, purposes: string[], destCountry: string): VisaOption[] {
+  const filtered = db.filter((v) => {
+    // If visa data has a source country, it implies destination is implicitly handled or it's a specific route.
+    // However, the issue is that we need to ensure the visa is FOR the destination country.
+    // Looking at loadVisaData, we don't seem to parse 'destination_country' from CSV explicitly into the object, 
+    // or maybe the 'name' contains it.
+    // Let's assume the current CSV structure might not be perfect, but let's try to filter by name or implicit rules.
+    
+    // Quick fix: If the visa name contains "Schengen" but destination is NOT a Schengen country, filter it out.
+    const isDestSchengen = Agreements.EU_SCHENGEN.includes(destCountry);
+    if (/schengen/i.test(v.name) && !isDestSchengen) return false;
+
+    // If destination is USA, we expect "US" or "USA" or "United States" in visa name or it should be a standard US visa type like B1/B2
+    if (destCountry === "United States" || destCountry === "USA") {
+         if (/schengen/i.test(v.name)) return false;
+         // If we had more metadata we could be stricter.
+    }
+
+    return true;
+  });
+
   const score = (v: VisaOption) => {
     const match = purposes.filter((p) => v.mappedCategories.includes(p)).length;
     return match;
   };
-  return db.slice().sort((a, b) => score(b) - score(a));
+  return filtered.sort((a, b) => score(b) - score(a));
 }
 
 export const Agreements = {
@@ -165,6 +185,6 @@ export async function getAllCountries(): Promise<string[]> {
     } catch {}
   }
   Object.values(Agreements).flat().forEach((c) => set.add(c));
-  ["United States", "United Kingdom", "UAE"].forEach((c) => set.add(c));
+  ["United States", "United Kingdom", "UAE", "China", "India", "Germany", "France", "Italy", "Spain", "Mexico", "Canada", "Australia", "Japan"].forEach((c) => set.add(c));
   return Array.from(set).sort((a, b) => a.localeCompare(b));
 }

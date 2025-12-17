@@ -7,7 +7,7 @@ export default function VisaUI({ origin, dest }: { origin: string; dest: string 
   const [tab, setTab] = useState<"options" | "docs">("options");
   const [selected, setSelected] = useState<VisaOption | null>(null);
   useEffect(() => { loadVisaData().then(setDb); }, []);
-  const list = useMemo(() => recommendVisas(db, purposes), [db, purposes]);
+  const list = useMemo(() => recommendVisas(db, purposes, dest), [db, purposes, dest]);
   const visaFree = isVisaFree(origin, dest);
   const cats = [
     "Leisure & Tourism",

@@ -214,10 +214,73 @@ const DATA: Record<string, City[]> = {
     { name: "Abu Dhabi", airport: { name: "Zayed International", code: "AUH" }, lat: 24.4329, lng: 54.6511 },
     { name: "Sharjah", airport: { name: "Sharjah", code: "SHJ" }, lat: 25.3286, lng: 55.5170 },
   ],
+  China: [
+    { name: "Beijing", airport: { name: "Beijing Capital", code: "PEK" }, lat: 40.0799, lng: 116.6031 },
+    { name: "Shanghai", airport: { name: "Shanghai Pudong", code: "PVG" }, lat: 31.1443, lng: 121.8083 },
+    { name: "Guangzhou", airport: { name: "Guangzhou Baiyun", code: "CAN" }, lat: 23.3959, lng: 113.2988 },
+    { name: "Shenzhen", airport: { name: "Shenzhen Bao'an", code: "SZX" }, lat: 22.6393, lng: 113.8107 },
+  ],
+  India: [
+    { name: "New Delhi", airport: { name: "Indira Gandhi International", code: "DEL" }, lat: 28.5562, lng: 77.1000 },
+    { name: "Mumbai", airport: { name: "Chhatrapati Shivaji Maharaj", code: "BOM" }, lat: 19.0896, lng: 72.8656 },
+    { name: "Bengaluru", airport: { name: "Kempegowda International", code: "BLR" }, lat: 13.1986, lng: 77.7066 },
+    { name: "Chennai", airport: { name: "Chennai International", code: "MAA" }, lat: 12.9941, lng: 80.1709 },
+  ],
+  Japan: [
+    { name: "Tokyo", airport: { name: "Narita International", code: "NRT" }, lat: 35.7720, lng: 140.3929 },
+    { name: "Osaka", airport: { name: "Kansai International", code: "KIX" }, lat: 34.4320, lng: 135.2304 },
+    { name: "Fukuoka", airport: { name: "Fukuoka", code: "FUK" }, lat: 33.5859, lng: 130.4507 },
+  ],
+  Mexico: [
+    { name: "Mexico City", airport: { name: "Benito Juárez International", code: "MEX" }, lat: 19.4361, lng: -99.0719 },
+    { name: "Cancún", airport: { name: "Cancún International", code: "CUN" }, lat: 21.0367, lng: -86.8771 },
+    { name: "Guadalajara", airport: { name: "Guadalajara", code: "GDL" }, lat: 20.5218, lng: -103.3110 },
+  ],
+  Brazil: [
+    { name: "São Paulo", airport: { name: "Guarulhos", code: "GRU" }, lat: -23.4356, lng: -46.4731 },
+    { name: "Rio de Janeiro", airport: { name: "Galeão", code: "GIG" }, lat: -22.8089, lng: -43.2436 },
+    { name: "Brasília", airport: { name: "Brasília", code: "BSB" }, lat: -15.8697, lng: -47.9172 },
+  ],
+  Argentina: [
+    { name: "Buenos Aires", airport: { name: "Ezeiza", code: "EZE" }, lat: -34.8150, lng: -58.5348 },
+    { name: "Mendoza", airport: { name: "El Plumerillo", code: "MDZ" }, lat: -32.8317, lng: -68.7929 },
+  ],
+  Chile: [
+    { name: "Santiago", airport: { name: "Arturo Merino Benítez", code: "SCL" }, lat: -33.3930, lng: -70.7858 },
+  ],
+  Colombia: [
+    { name: "Bogotá", airport: { name: "El Dorado", code: "BOG" }, lat: 4.7016, lng: -74.1469 },
+    { name: "Medellín", airport: { name: "José María Córdova", code: "MDE" }, lat: 6.1645, lng: -75.4231 },
+  ],
+  Peru: [
+    { name: "Lima", airport: { name: "Jorge Chávez", code: "LIM" }, lat: -12.0241, lng: -77.1120 },
+    { name: "Cusco", airport: { name: "Alejandro Velasco Astete", code: "CUZ" }, lat: -13.5357, lng: -71.9388 },
+  ],
+  Thailand: [
+    { name: "Bangkok", airport: { name: "Suvarnabhumi", code: "BKK" }, lat: 13.6900, lng: 100.7501 },
+    { name: "Phuket", airport: { name: "Phuket", code: "HKT" }, lat: 8.1132, lng: 98.3169 },
+  ],
+  Vietnam: [
+    { name: "Ho Chi Minh City", airport: { name: "Tan Son Nhat", code: "SGN" }, lat: 10.8185, lng: 106.6588 },
+    { name: "Hanoi", airport: { name: "Noi Bai", code: "HAN" }, lat: 21.2130, lng: 105.8035 },
+  ],
+  "Saudi Arabia": [
+    { name: "Riyadh", airport: { name: "King Khalid", code: "RUH" }, lat: 24.9576, lng: 46.6988 },
+    { name: "Jeddah", airport: { name: "King Abdulaziz", code: "JED" }, lat: 21.6796, lng: 39.1565 },
+  ],
+  Turkey: [
+    { name: "Istanbul", airport: { name: "Istanbul", code: "IST" }, lat: 41.2753, lng: 28.7519 },
+    { name: "Antalya", airport: { name: "Antalya", code: "AYT" }, lat: 36.8987, lng: 30.8005 },
+  ],
+  "South Korea": [
+    { name: "Seoul", airport: { name: "Incheon", code: "ICN" }, lat: 37.4602, lng: 126.4407 },
+  ],
 };
 
 export function getCities(country: string): City[] {
-  return DATA[country] || [];
+  return DATA[country] || [
+    { name: `${country} City`, airport: { name: "International Airport", code: "GEN" }, lat: 0, lng: 0 }
+  ];
 }
 
 export function listCountries(): string[] {
