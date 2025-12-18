@@ -181,7 +181,7 @@ function Chatbot({ onSetDest, onSetOrigin, user, setRoute }: { onSetDest: (c: st
     if (dest && origin && !flowStarted) {
       setFlowStarted(true);
       const free = isVisaFree(origin, dest);
-      setMessages((m) => [...m, free ? { type: "noVisa" } : { type: "info", text: "Visa may be required. Select purposes to get recommendations." }, { type: "selectCities" }]);
+      setMessages((m) => [...m, free ? { type: "noVisa" } : { type: "info", text: "Visa may be required. Select purposes to get recommendations." }]);
     }
   }, [dest, origin]);
   return (
@@ -218,6 +218,34 @@ function Chatbot({ onSetDest, onSetOrigin, user, setRoute }: { onSetDest: (c: st
       {origin && dest ? (
         <SelectionStatus origin={origin} dest={dest} visaFree={isVisaFree(origin, dest)} />
       ) : null}
+
+      {/* 
+        Step 1: Visa Information (Always First)
+        Only show VisaUI immediately if destination is selected.
+        The city selection will be hidden until the user is done with Visa.
+      */}
+      {dest && origin ? <VisaUI origin={origin} dest={dest} /> : null}
+
+      {/* 
+        Step 2: Trip Planning (After Visa)
+        We will show a button to proceed to trip planning only after visa info is shown.
+      */}
+      {dest && origin && !citiesSelected ? (
+        <div className="card p-4 mb-4 text-center">
+          <div className="mb-2 font-medium text-lg">Ready to plan your trip?</div>
+          <div className="text-slate-600 mb-4">Once you know your visa requirements, proceed to select your cities and flights.</div>
+          <button 
+            className="btn btn-primary w-full md:w-auto" 
+            onClick={() => {
+              setCitiesSelected(true);
+              setMessages(m => [...m, { type: "selectCities" }]);
+            }}
+          >
+            Plan My Trip (Flights & Hotels)
+          </button>
+        </div>
+      ) : null}
+
       {messages.length > 0 ? (
       <div className="card p-0 mb-4" ref={listRef}>
         <div className="p-4 space-y-3">
@@ -226,7 +254,7 @@ function Chatbot({ onSetDest, onSetOrigin, user, setRoute }: { onSetDest: (c: st
               {m.type === "text" ? (<div>{m.text}</div>) : null}
               {m.type === "noVisa" ? (<NoVisaBubble />) : null}
               {m.type === "selectCities" && dest && origin ? (
-                <SelectCitiesBubble originCountry={origin} destCountry={dest} onContinue={(f, t, d, i, tm, tt) => { setFromCity(f); setToCity(t); if(d) setTotalStay(d); if(i) setItinerary(i); if(tm) setTransportModes(tm); if(tt) setTripType(tt); setCitiesSelected(true); setShowMulti(true); if (!upsellShown) { setUpsellShown(true); setMessages((mm) => [...mm, { type: "upsell" }]); } }} />
+                <SelectCitiesBubble originCountry={origin} destCountry={dest} onContinue={(f, t, d, i, tm, tt) => { setFromCity(f); setToCity(t); if(d) setTotalStay(d); if(i) setItinerary(i); if(tm) setTransportModes(tm); if(tt) setTripType(tt); setShowMulti(true); if (!upsellShown) { setUpsellShown(true); setMessages((mm) => [...mm, { type: "upsell" }]); } }} />
               ) : null}
               {m.type === "info" ? (<InfoBubble title="Info" text={m.text || ""} />) : null}
               {m.type === "upsell" ? (
@@ -244,16 +272,7 @@ function Chatbot({ onSetDest, onSetOrigin, user, setRoute }: { onSetDest: (c: st
         </div>
       </div>
       ) : null}
-      {(!origin || !dest || (!isVisaFree(origin, dest) && !citiesSelected)) ? (
-        <div className="flex items-start gap-2 mb-2">
-          <label className="inline-flex items-center gap-2">
-            <input type="checkbox" checked={dontNeedVisa} onChange={(e) => setDontNeedVisa(e.target.checked)} />
-            <span>I don’t need a visa</span>
-          </label>
-        </div>
-      ) : null}
-      {null}
-      {dest && origin ? <VisaUI origin={origin} dest={dest} /> : null}
+
       <FlightModal open={showFlight} onClose={() => setShowFlight(false)} originCountry={origin || ""} destCountry={dest || ""} totalStay={totalStay} fullItinerary={itinerary} />
       <HotelModal open={showHotel} onClose={() => setShowHotel(false)} destCountry={dest || ""} />
       <InsuranceModal open={showInsurance} onClose={() => setShowInsurance(false)} originCountry={origin || ""} destCountry={dest || ""} totalStay={totalStay} />

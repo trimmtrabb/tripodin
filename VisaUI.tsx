@@ -30,6 +30,7 @@ export default function VisaUI({ origin, dest }: { origin: string; dest: string 
       </div>
       <div className="card p-4 mb-3">
         <div className="font-medium mb-2">Select travel purposes</div>
+        <div className="text-sm text-slate-500 mb-2">Select all activities you plan to do. We will find visas that cover ALL your selected purposes.</div>
         <div className="flex flex-wrap gap-2">
           {cats.map((c) => {
             const active = purposes.includes(c);
@@ -44,23 +45,35 @@ export default function VisaUI({ origin, dest }: { origin: string; dest: string 
         <button className={`btn ${tab === "docs" ? "btn-primary" : "btn-secondary"}`} onClick={() => setTab("docs")}>Required Documents</button>
       </div>
       {tab === "options" ? (
-        <div className="grid md:grid-cols-2 gap-3">
-          {list.map((v, i) => {
-            const best = i === 0;
-            const isSel = selected?.name === v.name;
-            return (
-              <div key={v.name} className={`card p-4 ${isSel ? "ring-2 ring-green-400" : ""}`} onClick={() => setSelected(v)}>
-                <div className="flex items-center gap-2 mb-1">
-                  {isSel ? <span className="badge badge-selected">Selected</span> : best ? <span className="badge badge-best">Best Match</span> : null}
-                  <div className="font-semibold">{v.name}</div>
+        list.length === 0 ? (
+          <div className="card p-8 text-center bg-slate-50">
+            <div className="text-4xl mb-2">🔍</div>
+            <div className="text-lg font-medium text-slate-700">No matching visas found</div>
+            <div className="text-slate-600 max-w-md mx-auto mt-1">
+              {purposes.length > 0 
+                ? "We couldn't find a single visa that covers all your selected activities. Try selecting fewer purposes or looking for separate visas."
+                : "Select at least one travel purpose above to see recommendations."}
+            </div>
+          </div>
+        ) : (
+          <div className="grid md:grid-cols-2 gap-3">
+            {list.map((v, i) => {
+              const best = i === 0;
+              const isSel = selected?.name === v.name;
+              return (
+                <div key={v.name} className={`card p-4 ${isSel ? "ring-2 ring-green-400" : ""}`} onClick={() => setSelected(v)}>
+                  <div className="flex items-center gap-2 mb-1">
+                    {isSel ? <span className="badge badge-selected">Selected</span> : best ? <span className="badge badge-best">Best Match</span> : null}
+                    <div className="font-semibold">{v.name}</div>
+                  </div>
+                  <div className="text-sm text-slate-600">Fee {v.fee} · Processing {v.processing} · Validity {v.validity}</div>
+                  {v.description ? <div className="text-xs text-slate-500 mt-1 italic">{v.description}</div> : null}
+                  <div className="mt-2 text-sm">{v.mappedCategories.join(", ")}</div>
                 </div>
-                <div className="text-sm text-slate-600">Fee {v.fee} · Processing {v.processing} · Validity {v.validity}</div>
-                {v.description ? <div className="text-xs text-slate-500 mt-1 italic">{v.description}</div> : null}
-                <div className="mt-2 text-sm">{v.mappedCategories.join(", ")}</div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        )
       ) : (
         <div className="card p-4">
           {selected ? (

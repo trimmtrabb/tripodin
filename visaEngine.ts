@@ -69,12 +69,10 @@ export function recommendVisas(db: VisaDB, purposes: string[], destCountry: stri
   };
 
   const score = (v: VisaOption) => {
-    let matchCount = 0;
+    // Collect keywords per purpose to enforce AND logic
+    const purposeKeywordSets = purposes.map(p => PURPOSE_KEYWORDS[p] || []);
     
-    // Collect all keywords for selected purposes
-    const keywords = purposes.flatMap(p => PURPOSE_KEYWORDS[p] || []);
-    
-    if (keywords.length === 0) return 0;
+    if (purposeKeywordSets.length === 0) return 0;
 
     const searchableText = [
       v.name,
@@ -83,16 +81,20 @@ export function recommendVisas(db: VisaDB, purposes: string[], destCountry: stri
       v.country || ""
     ].join(" ").toLowerCase();
 
-    // Check if ANY keyword matches
-    const hasMatch = keywords.some(k => searchableText.includes(k.toLowerCase()));
+    // AND Logic: The visa must have at least one match for EVERY selected purpose
+    const matchesAllPurposes = purposeKeywordSets.every(keywords => 
+      keywords.some(k => searchableText.includes(k.toLowerCase()))
+    );
     
-    if (hasMatch) {
-      matchCount = 10; // Base score for match
-      // Bonus for exact category matches or multiple keyword hits could be added here
-      keywords.forEach(k => {
-        if (searchableText.includes(k.toLowerCase())) matchCount++;
-      });
-    }
+    if (!matchesAllPurposes) return 0; // If it fails even one purpose, it's out.
+
+    // If it matches all purposes, calculate a relevance score
+    let matchCount = 100; // Base high score for matching all
+    
+    // Add bonus points for total keyword density
+    purposeKeywordSets.flat().forEach(k => {
+       if (searchableText.includes(k.toLowerCase())) matchCount++;
+    });
 
     return matchCount;
   };

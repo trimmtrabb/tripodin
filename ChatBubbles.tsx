@@ -364,6 +364,64 @@ export function SelectCitiesBubble({ originCountry, destCountry, onContinue }: {
       }
     }
   }, [names, start, planReturn]);
+  const TransportSelector = ({ idx, from, to }: { idx: number; from: string; to: string }) => {
+    const mode = getMode(idx, from, to);
+    const A = find(from);
+    const B = find(to);
+    
+    // Check recommendation
+    let isCarRec = false;
+    let recText = "";
+    if (A && B) {
+        const countryA = originCities.some(c => c.name === A.name) ? originCountry : (destCities.some(c => c.name === A.name) ? destCountry : "");
+        const countryB = originCities.some(c => c.name === B.name) ? originCountry : (destCities.some(c => c.name === B.name) ? destCountry : "");
+        
+        // Check if internal (same country) or same zone
+        const isInternal = countryA === countryB;
+        const isZone = countryA && countryB && isSameZone(countryA, countryB);
+        
+        if (isInternal || isZone) {
+             const d = distanceKm(A, B);
+             if (d <= 800) {
+                 isCarRec = true;
+                 recText = isInternal 
+                    ? "Short distance: Car/Train recommended" 
+                    : "Visa-free zone: Car/Train recommended";
+             }
+        }
+    }
+
+    return (
+      <div className="flex flex-col items-end">
+        <div className="flex bg-slate-100 rounded p-1 gap-1 shrink-0 relative">
+          <button
+            className={`p-1 rounded text-xs ${mode === "flight" ? "bg-white shadow text-blue-600" : "text-slate-400 hover:text-slate-600"}`}
+            onClick={() => setTransportModes((prev) => ({ ...prev, [idx]: "flight" }))}
+            title="Travel by Flight"
+          >✈️</button>
+          <button
+            className={`p-1 rounded text-xs ${mode === "train" ? "bg-white shadow text-amber-600" : "text-slate-400 hover:text-slate-600"}`}
+            onClick={() => setTransportModes((prev) => ({ ...prev, [idx]: "train" }))}
+            title="Travel by Train"
+          >🚆</button>
+          <button
+            className={`p-1 rounded text-xs ${mode === "car" ? "bg-white shadow text-blue-800" : "text-slate-400 hover:text-slate-600"}`}
+            onClick={() => setTransportModes((prev) => ({ ...prev, [idx]: "car" }))}
+            title={isCarRec ? "Recommended: Convenient & Visa-free" : "Travel by Car"}
+          >
+             🚗
+             {isCarRec && mode !== "car" && <span className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full animate-pulse" />}
+          </button>
+        </div>
+        {isCarRec && (
+            <div className="text-[10px] text-green-700 font-medium mt-1 bg-green-50 px-1.5 py-0.5 rounded border border-green-100 text-right leading-tight max-w-[120px]">
+                {recText}
+            </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="bubble bubble-blue p-4 animate-in">
       <div className="flex items-center gap-2 mb-2">
@@ -415,23 +473,7 @@ export function SelectCitiesBubble({ originCountry, destCountry, onContinue }: {
                 <select className="flex-1 border rounded p-2" value={first} onChange={(e) => setFirst(e.target.value)}>
                   {destCities.map((c) => (<option key={c.name} value={c.name}>{c.name}</option>))}
                 </select>
-                <div className="flex bg-slate-100 rounded p-1 gap-1 shrink-0">
-                  <button
-                    className={`p-1 rounded text-xs ${(getMode(0, start, first) === "flight") ? "bg-white shadow text-blue-600" : "text-slate-400 hover:text-slate-600"}`}
-                    onClick={() => setTransportModes((prev) => ({ ...prev, 0: "flight" }))}
-                    title="Travel by Flight"
-                  >✈️</button>
-                  <button
-                    className={`p-1 rounded text-xs ${(getMode(0, start, first) === "train") ? "bg-white shadow text-amber-600" : "text-slate-400 hover:text-slate-600"}`}
-                    onClick={() => setTransportModes((prev) => ({ ...prev, 0: "train" }))}
-                    title="Travel by Train"
-                  >🚆</button>
-                  <button
-                    className={`p-1 rounded text-xs ${(getMode(0, start, first) === "car") ? "bg-white shadow text-blue-800" : "text-slate-400 hover:text-slate-600"}`}
-                    onClick={() => setTransportModes((prev) => ({ ...prev, 0: "car" }))}
-                    title="Travel by Car"
-                  >🚗</button>
-                </div>
+                <TransportSelector idx={0} from={start} to={first} />
                 {planReturn && finalCity !== first ? (
                   <button className="pill" onClick={() => { setFinalCity(first); setReturnStops([]); setReturnFilters([]); }}>Mark as Final</button>
                 ) : null}
@@ -555,23 +597,7 @@ export function SelectCitiesBubble({ originCountry, destCountry, onContinue }: {
                     <option key={c.name} value={c.name} label={`${c.airport ? "✈️ " : ""}${c.name}${c.airport && c.airport.code ? ` (${c.airport.code})` : ""}`} />
                   ))}
                 </datalist>
-                <div className="flex bg-slate-100 rounded p-1 gap-1 shrink-0">
-                  <button
-                    className={`p-1 rounded text-xs ${(getMode(idx + 1, idx === 0 ? first : extra[idx - 1], city) === "flight") ? "bg-white shadow text-blue-600" : "text-slate-400 hover:text-slate-600"}`}
-                    onClick={() => setTransportModes((prev) => ({ ...prev, [idx + 1]: "flight" }))}
-                    title="Travel by Flight"
-                  >✈️</button>
-                  <button
-                    className={`p-1 rounded text-xs ${(getMode(idx + 1, idx === 0 ? first : extra[idx - 1], city) === "train") ? "bg-white shadow text-amber-600" : "text-slate-400 hover:text-slate-600"}`}
-                    onClick={() => setTransportModes((prev) => ({ ...prev, [idx + 1]: "train" }))}
-                    title="Travel by Train"
-                  >🚆</button>
-                  <button
-                    className={`p-1 rounded text-xs ${(getMode(idx + 1, idx === 0 ? first : extra[idx - 1], city) === "car") ? "bg-white shadow text-blue-800" : "text-slate-400 hover:text-slate-600"}`}
-                    onClick={() => setTransportModes((prev) => ({ ...prev, [idx + 1]: "car" }))}
-                    title="Travel by Car"
-                  >🚗</button>
-                </div>
+                <TransportSelector idx={idx + 1} from={idx === 0 ? first : extra[idx - 1]} to={city} />
                 <input
                   className="w-24 border rounded p-2"
                   type="number"
@@ -758,23 +784,7 @@ export function SelectCitiesBubble({ originCountry, destCountry, onContinue }: {
                     title="Search and select your return stop"
                   />
                 )}
-                <div className="flex bg-slate-100 rounded p-1 gap-1 shrink-0">
-                  <button
-                    className={`p-1 rounded text-xs ${(getMode(transportIdx, idx === 0 ? finalCity : returnStops[idx - 1], city) === "flight") ? "bg-white shadow text-blue-600" : "text-slate-400 hover:text-slate-600"}`}
-                    onClick={() => setTransportModes((prev) => ({ ...prev, [transportIdx]: "flight" }))}
-                    title="Travel by Flight"
-                  >✈️</button>
-                  <button
-                    className={`p-1 rounded text-xs ${(getMode(transportIdx, idx === 0 ? finalCity : returnStops[idx - 1], city) === "train") ? "bg-white shadow text-amber-600" : "text-slate-400 hover:text-slate-600"}`}
-                    onClick={() => setTransportModes((prev) => ({ ...prev, [transportIdx]: "train" }))}
-                    title="Travel by Train"
-                  >🚆</button>
-                  <button
-                    className={`p-1 rounded text-xs ${(getMode(transportIdx, idx === 0 ? finalCity : returnStops[idx - 1], city) === "car") ? "bg-white shadow text-blue-800" : "text-slate-400 hover:text-slate-600"}`}
-                    onClick={() => setTransportModes((prev) => ({ ...prev, [transportIdx]: "car" }))}
-                    title="Travel by Car"
-                  >🚗</button>
-                </div>
+                <TransportSelector idx={transportIdx} from={idx === 0 ? finalCity : returnStops[idx - 1]} to={city} />
                 <button
                   className="btn btn-secondary"
                   title="Remove stop"
