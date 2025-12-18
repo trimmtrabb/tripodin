@@ -70,32 +70,39 @@ function useAuth() {
 function Header({ user, onLogin, onLogout, route, setRoute, onNewChat }: { user: User; onLogin: () => void; onLogout: () => void; route: Route; setRoute: (r: Route) => void; onNewChat: () => void }) {
   const [lang, setLang] = useState("en");
   return (
-    <div className="gradient-header border-b border-slate-200">
-      <div className="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between">
+    <div className="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm/50 backdrop-blur-md bg-white/90">
+      <div className="mx-auto max-w-6xl px-4 py-4 flex items-center justify-between">
         <div 
-          className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity" 
+          className="flex items-center gap-3 cursor-pointer group" 
           onClick={onNewChat}
         >
-          <div className="h-8 w-8 rounded-lg bg-primary-500 text-white grid place-items-center">🧭</div>
-          <div className="text-lg font-semibold">TripOdin AI-Travel Assistant</div>
+          <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-600 to-blue-500 text-white grid place-items-center shadow-blue-200 shadow-lg group-hover:shadow-xl transition-all transform group-hover:scale-105">
+            <span className="text-xl">🧭</span>
+          </div>
+          <div>
+             <div className="text-xl font-bold text-slate-900 tracking-tight">TripOdin</div>
+             <div className="text-[10px] font-bold text-blue-600 uppercase tracking-widest">AI Travel Assistant</div>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <select value={lang} onChange={(e) => setLang(e.target.value)} className="btn btn-secondary">
-            <option value="en">EN</option>
-            <option value="de">DE</option>
-            <option value="fr">FR</option>
-            <option value="es">ES</option>
+        <div className="flex items-center gap-3">
+          <select value={lang} onChange={(e) => setLang(e.target.value)} className="bg-slate-50 border border-slate-200 text-slate-600 text-sm rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-blue-500 outline-none">
+            <option value="en">🇺🇸 EN</option>
+            <option value="de">🇩🇪 DE</option>
+            <option value="fr">🇫🇷 FR</option>
+            <option value="es">🇪🇸 ES</option>
           </select>
-          <button className="btn btn-secondary" onClick={onNewChat}>New chat</button>
+          
+          <button className="hidden md:block px-4 py-2 text-sm font-medium text-slate-600 hover:text-blue-600 transition-colors" onClick={onNewChat}>New Trip</button>
+          
           {!user ? (
             <>
-              <button className="btn btn-secondary" onClick={onLogin}>Log in with Google</button>
-              <button className="btn btn-primary" onClick={onLogin}>Sign Up with Google</button>
+              <button className="hidden md:block px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-900" onClick={onLogin}>Log in</button>
+              <button className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-full shadow-lg shadow-blue-200 transition-all transform hover:-translate-y-0.5" onClick={onLogin}>Sign Up</button>
             </>
           ) : (
             <>
-              <button className={`btn ${route === "dashboard" ? "btn-primary" : "btn-secondary"}`} onClick={() => setRoute("dashboard")}>Dashboard</button>
-              <button className="btn btn-secondary" onClick={onLogout}>Sign Out</button>
+              <button className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${route === "dashboard" ? "bg-blue-100 text-blue-700" : "text-slate-600 hover:bg-slate-100"}`} onClick={() => setRoute("dashboard")}>Dashboard</button>
+              <button className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-red-600" onClick={onLogout}>Sign Out</button>
             </>
           )}
         </div>
@@ -200,20 +207,47 @@ function Chatbot({ onSetDest, onSetOrigin, user, setRoute }: { onSetDest: (c: st
           <div className="mt-1 text-sm text-slate-500">AI-powered visa information</div>
         </div>
       </div>
-      <div className="card p-4 mb-4">
-        <div className="hero-title">Welcome to TripOdin!</div>
-        <div className="hero-sub">Start by selecting your nationality, then pick your destination.</div>
-      </div>
-      <div className="card p-4 mb-4">
-        <div className="mb-2 font-medium flex items-center gap-2"><span className="pill pill-green">🪪 Nationality</span><span>Where are you traveling from?</span></div>
-        <CountrySelect options={countries} value={origin} onChange={(v) => { setOrigin(v); onSetOrigin(v); }} />
-      </div>
-      <div className="card p-4 mb-4">
-        <div className="mb-2 font-medium flex items-center gap-2"><span className="pill pill-blue">📍 Destination</span><span>Where are you planning to travel?</span></div>
-        <CountrySelect options={countries} value={dest} onChange={(v) => { setDest(v); onSetDest(v); }} />
-        <div className="text-sm text-slate-600">Popular: {popular.map((p) => (
-          <button key={p} className="underline mr-2" onClick={() => onPopular(p)}>{p}</button>
-        ))}</div>
+      <div className="card p-6 mb-6 shadow-lg border-blue-100 bg-white">
+        <div className="hero-title mb-2 text-center text-blue-900">Start Your Journey</div>
+        <div className="hero-sub mb-6 text-center">Select your origin and destination to get started</div>
+        
+        <div className="grid md:grid-cols-2 gap-6">
+          <div>
+            <CountrySelect 
+              label="DEPARTURE:"
+              color="blue"
+              placeholder="Select origin country"
+              options={countries} 
+              value={origin} 
+              onChange={(v) => { setOrigin(v); onSetOrigin(v); }} 
+            />
+          </div>
+          <div>
+            <CountrySelect 
+              label="ARRIVAL:"
+              color="green"
+              placeholder="Select destination country"
+              options={countries} 
+              value={dest} 
+              onChange={(v) => { setDest(v); onSetDest(v); }} 
+            />
+          </div>
+        </div>
+
+        <div className="mt-4 text-center">
+             <div className="text-sm text-slate-500 mb-2">Popular Destinations</div>
+             <div className="flex flex-wrap justify-center gap-2">
+                {popular.map((p) => (
+                  <button 
+                    key={p} 
+                    className="px-3 py-1 bg-slate-100 hover:bg-slate-200 rounded-full text-xs text-slate-700 transition-colors" 
+                    onClick={() => onPopular(p)}
+                  >
+                    {p}
+                  </button>
+                ))}
+             </div>
+        </div>
       </div>
       {origin && dest ? (
         <SelectionStatus origin={origin} dest={dest} visaFree={isVisaFree(origin, dest)} />
@@ -283,21 +317,31 @@ function Chatbot({ onSetDest, onSetOrigin, user, setRoute }: { onSetDest: (c: st
 
 function SelectionStatus({ origin, dest, visaFree }: { origin: string; dest: string; visaFree: boolean }) {
   return (
-    <div className="card p-4 mb-4 animate-in">
-      <div className="flex items-center gap-3">
-        <div className="pill pill-green">✓ Selections Confirmed</div>
-        <div className="text-sm text-slate-700">{origin} → {dest}</div>
+    <div className="bg-slate-900 rounded-xl p-4 mb-6 shadow-xl text-white flex flex-col md:flex-row items-center justify-between gap-4 animate-in">
+      <div className="flex items-center gap-4">
+        <div className="flex flex-col">
+           <span className="text-xs text-slate-400 uppercase tracking-wider font-bold">Origin</span>
+           <span className="font-bold text-lg">{origin}</span>
+        </div>
+        <div className="text-slate-500">→</div>
+        <div className="flex flex-col">
+           <span className="text-xs text-slate-400 uppercase tracking-wider font-bold">Destination</span>
+           <span className="font-bold text-lg">{dest}</span>
+        </div>
+      </div>
+      
+      <div className={`px-4 py-2 rounded-full text-sm font-bold flex items-center gap-2 ${visaFree ? "bg-green-500/20 text-green-300 border border-green-500/30" : "bg-amber-500/20 text-amber-300 border border-amber-500/30"}`}>
         {visaFree ? (
-          <div className="badge badge-selected">Visa‑free detected</div>
+           <><span>✅</span> <span>Visa-Free Travel</span></>
         ) : (
-          <div className="badge badge-best">Visa may be required</div>
+           <><span>⚠️</span> <span>Visa May Be Required</span></>
         )}
       </div>
     </div>
   );
 }
 
-function CountrySelect({ options, value, onChange }: { options: string[]; value: string; onChange: (v: string) => void }) {
+function CountrySelect({ options, value, onChange, placeholder, label, color = "blue" }: { options: string[]; value: string; onChange: (v: string) => void; placeholder?: string; label?: string; color?: "blue" | "green" }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [active, setActive] = useState(0);
@@ -309,6 +353,7 @@ function CountrySelect({ options, value, onChange }: { options: string[]; value:
     return list.slice(0, 300);
   }, [query, options]);
   const pick = (v: string) => { onChange(v); setQuery(""); setOpen(false); setEditing(false); };
+  
   React.useEffect(() => {
     const onDown = (e: MouseEvent) => {
       const el = ref.current; if (!el) return; if (!el.contains(e.target as Node)) { setOpen(false); setEditing(false); }
@@ -318,22 +363,32 @@ function CountrySelect({ options, value, onChange }: { options: string[]; value:
     window.addEventListener("keydown", onKey);
     return () => { window.removeEventListener("mousedown", onDown); window.removeEventListener("keydown", onKey); };
   }, []);
+
+  const dotColor = color === "blue" ? "bg-blue-500" : "bg-green-500";
+  const ringColor = color === "blue" ? "focus:ring-blue-500" : "focus:ring-green-500";
+  const bgColor = color === "blue" ? "bg-blue-50" : "bg-green-50";
+
   return (
     <div className="relative" ref={ref}>
-      <div className="flex items-center gap-2">
-        <div className="icon-square bg-blue-600 text-white">🌍</div>
+      {label && (
+        <div className="flex items-center gap-2 mb-2">
+          <div className={`w-3 h-3 rounded-full ${dotColor}`} />
+          <div className="text-xs font-bold tracking-wider text-slate-500 uppercase">{label}</div>
+        </div>
+      )}
+      <div className="relative group">
         {value && !editing ? (
           <div 
-            className="w-full border rounded p-2 bg-slate-50 cursor-pointer flex items-center justify-between group"
+            className={`w-full border border-slate-200 rounded-xl p-3 ${bgColor} cursor-pointer flex items-center justify-between hover:border-${color}-300 transition-colors shadow-sm`}
             onClick={() => { setEditing(true); setQuery(value); setOpen(true); }}
           >
-            <span>{value}</span>
-            <span className="text-xs text-slate-400 group-hover:text-blue-600">Click to edit</span>
+            <span className="font-medium text-lg text-slate-800">{value}</span>
+            <span className="text-xs text-slate-400 group-hover:text-slate-600">Edit</span>
           </div>
         ) : (
           <input 
-            className="w-full border rounded p-2" 
-            placeholder="Search or pick a country" 
+            className={`w-full border border-slate-200 rounded-xl p-3 text-lg outline-none focus:ring-2 ${ringColor} transition-shadow shadow-sm placeholder:text-slate-300`} 
+            placeholder={placeholder || "Search country..."}
             value={query} 
             autoFocus={editing}
             onFocus={() => setOpen(true)} 
@@ -348,9 +403,17 @@ function CountrySelect({ options, value, onChange }: { options: string[]; value:
         )}
       </div>
       {open && filtered.length > 0 ? (
-        <div className="absolute z-10 left-0 right-0 mt-2 card max-h-64 overflow-y-auto">
+        <div className="absolute z-20 left-0 right-0 mt-2 bg-white rounded-xl border border-slate-100 shadow-xl max-h-64 overflow-y-auto py-1">
           {filtered.map((o, i) => (
-            <button key={o} className={`w-full text-left px-3 py-2 ${i === active ? "bg-blue-50" : ""}`} onMouseEnter={() => setActive(i)} onMouseDown={(e) => e.preventDefault()} onClick={() => pick(o)}>{o}</button>
+            <button 
+              key={o} 
+              className={`w-full text-left px-4 py-2.5 hover:bg-slate-50 transition-colors ${i === active ? "bg-slate-50 text-blue-600" : "text-slate-700"}`} 
+              onMouseEnter={() => setActive(i)} 
+              onMouseDown={(e) => e.preventDefault()} 
+              onClick={() => pick(o)}
+            >
+              {o}
+            </button>
           ))}
         </div>
       ) : null}

@@ -4,12 +4,16 @@ import { isSameZone } from "./visaEngine";
 
 export function NoVisaBubble() {
   return (
-    <div className="bubble bubble-green p-4 animate-in">
-      <div className="flex items-center gap-2">
-        <span className="icon-square bg-green-600 text-white">✅</span>
-        <div className="font-semibold text-green-700">Great news! You can travel visa‑free.</div>
+    <div className="bg-green-50 border border-green-200 rounded-xl p-6 animate-in flex items-start gap-4 shadow-sm mt-4">
+      <div className="w-12 h-12 rounded-full bg-green-100 text-green-600 grid place-items-center text-2xl shrink-0">
+        🎉
       </div>
-      <div className="text-sm text-green-800 mt-1">Select your cities below to continue.</div>
+      <div>
+        <div className="text-lg font-bold text-green-900 mb-1">Great news! You can travel visa‑free.</div>
+        <div className="text-green-800 leading-relaxed">
+          Based on your nationality, you do not need a visa for this trip. You can proceed directly to planning your itinerary.
+        </div>
+      </div>
     </div>
   );
 }
@@ -423,38 +427,78 @@ export function SelectCitiesBubble({ originCountry, destCountry, onContinue }: {
   };
 
   return (
-    <div className="bubble bubble-blue p-4 animate-in">
-      <div className="flex items-center gap-2 mb-2">
-        <button className={`btn ${tab === "direct" ? "btn-primary" : "btn-secondary"}`} onClick={() => setTab("direct")}>Direct Trip</button>
-        <button className={`btn ${tab === "multi" ? "btn-primary" : "btn-secondary"}`} onClick={() => setTab("multi")}>Multi‑city</button>
+    <div className="bg-blue-50/50 border border-blue-200 rounded-2xl p-6 shadow-lg animate-in mt-4">
+      
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-blue-600 rounded-xl grid place-items-center text-white text-xl shadow-blue-200 shadow-lg">🏙️</div>
+            <h2 className="text-xl font-bold text-blue-900">Select Your Cities</h2>
+        </div>
+        <div className="flex bg-white rounded-lg p-1 border border-slate-200 shadow-sm">
+             <button className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${tab === "direct" ? "bg-blue-100 text-blue-700" : "text-slate-500 hover:text-slate-700"}`} onClick={() => setTab("direct")}>Direct Trip</button>
+             <button className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${tab === "multi" ? "bg-blue-100 text-blue-700" : "text-slate-500 hover:text-slate-700"}`} onClick={() => setTab("multi")}>Multi‑city</button>
+        </div>
       </div>
+
       {tab === "direct" ? (
         <div>
-          <div className="font-semibold mb-1">Select Your Cities</div>
-          <div className="text-sm text-slate-700 mb-2">Please select your departure and arrival cities:</div>
-          <div className="grid md:grid-cols-2 gap-3">
+          <div className="text-slate-600 mb-4 font-medium">Please select your departure and arrival cities:</div>
+          
+          <div className="grid md:grid-cols-2 gap-6 bg-white p-6 rounded-xl border border-slate-100 shadow-sm mb-6">
+            {/* Departure */}
             <div>
-              <div className="text-xs mb-1 text-blue-700">Departure</div>
-              <select className="w-full border rounded p-2" value={from} onChange={(e) => setFrom(e.target.value)} title="Select your departure city">
-                {originCities.map((c) => (
-                  <option key={c.name} value={c.name}>
-                    {c.airport ? "✈️ " : ""}{c.name}{c.airport && c.airport.code ? ` (${c.airport.code})` : ""}
-                  </option>
-                ))}
-              </select>
+              <div className="flex items-center gap-2 mb-3">
+                 <div className="w-3 h-3 bg-blue-500 rounded-full shadow-sm" />
+                 <span className="text-xs font-bold text-blue-900 tracking-wider uppercase">DEPARTURE:</span>
+              </div>
+              <div className="text-sm text-slate-500 mb-2">Select your departure city in {originCountry}</div>
+              <div className="relative">
+                <select 
+                    className="w-full bg-blue-50/50 border border-blue-100 text-slate-800 rounded-lg p-3 pr-8 outline-none focus:ring-2 focus:ring-blue-500 transition-shadow appearance-none font-medium" 
+                    value={from} 
+                    onChange={(e) => setFrom(e.target.value)}
+                >
+                    {originCities.map((c) => (
+                    <option key={c.name} value={c.name}>
+                        {c.name}{c.airport && c.airport.code ? ` (${c.airport.code})` : ""}
+                    </option>
+                    ))}
+                </select>
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 text-blue-400 pointer-events-none">▼</div>
+              </div>
             </div>
+
+            {/* Arrival */}
             <div>
-              <div className="text-xs mb-1 text-green-700">Arrival</div>
-              <select className="w-full border rounded p-2" value={to} onChange={(e) => setTo(e.target.value)} title="Select your arrival city">
-                {destCities.map((c) => (
-                  <option key={c.name} value={c.name}>
-                    {c.airport ? "✈️ " : ""}{c.name}{c.airport && c.airport.code ? ` (${c.airport.code})` : ""}
-                  </option>
-                ))}
-              </select>
+               <div className="flex items-center gap-2 mb-3">
+                 <div className="w-3 h-3 bg-green-500 rounded-full shadow-sm" />
+                 <span className="text-xs font-bold text-green-900 tracking-wider uppercase">ARRIVAL:</span>
+              </div>
+              <div className="text-sm text-slate-500 mb-2">Select your destination city in {destCountry}</div>
+              <div className="relative">
+                <select 
+                    className="w-full bg-green-50/50 border border-green-100 text-slate-800 rounded-lg p-3 pr-8 outline-none focus:ring-2 focus:ring-green-500 transition-shadow appearance-none font-medium" 
+                    value={to} 
+                    onChange={(e) => setTo(e.target.value)}
+                >
+                    {destCities.map((c) => (
+                    <option key={c.name} value={c.name}>
+                        {c.name}{c.airport && c.airport.code ? ` (${c.airport.code})` : ""}
+                    </option>
+                    ))}
+                </select>
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 text-green-600 pointer-events-none">▼</div>
+              </div>
             </div>
           </div>
-          <button className="btn btn-primary btn-lg mt-3" onClick={() => onContinue(from, to, 3, [from, to], {}, "oneway")}>{label}</button>
+
+          <button 
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-200 transition-all transform active:scale-[0.99] flex items-center justify-center gap-2 text-lg" 
+            onClick={() => onContinue(from, to, 3, [from, to], {}, "oneway")}
+          >
+            <span>Continue with {from} → {to}</span>
+            <span>→</span>
+          </button>
         </div>
       ) : (
         <div>
@@ -612,30 +656,22 @@ export function SelectCitiesBubble({ originCountry, destCountry, onContinue }: {
                 />
                 {finalCity && finalCity === (city || "") ? (
                   <span className="pill pill-blue">Final</span>
-                ) : planReturn ? (
+                ) : (
                   <button
                     className="pill"
-                    onClick={() => { if (city) { setFinalCity(city); setReturnStops([]); setReturnFilters([]); } }}
-                    title="Mark this city as final"
+                    onClick={() => {
+                      if (city) {
+                        setFinalCity(city);
+                        setPlanReturn(true);
+                        setReturnStops([]);
+                        setReturnFilters([]);
+                      }
+                    }}
+                    title="Return from this city (End of outbound trip)"
                   >
-                    Final
+                    Return ↩
                   </button>
-                ) : null}
-                <button
-                  className="pill"
-                  onClick={() => {
-                    if (city) {
-                      setReturnStops((arr) => [...arr, city]);
-                      setReturnFilters((arr) => [...arr, city]);
-                      setExtra((arr) => arr.filter((_, i) => i !== idx));
-                      setExtraDays((arr) => arr.filter((_, i) => i !== idx));
-                      setExtraFilter((arr) => arr.filter((_, i) => i !== idx));
-                    }
-                  }}
-                  title="Mark this city as a return stop"
-                >
-                  Return
-                </button>
+                )}
                 <button
                   className="btn btn-secondary"
                   title="Remove city"
@@ -840,7 +876,7 @@ export function SelectCitiesBubble({ originCountry, destCountry, onContinue }: {
               {planReturn && finalCity ? (
                 <div className="text-sm text-slate-700 mt-1">
                   {(() => {
-                    const forwardArr = [start, ...extra, first].filter(Boolean);
+                    const forwardArr = [start, first, ...extra].filter(Boolean);
                     const idx = forwardArr.findIndex((n) => n === finalCity);
                     const forward = idx >= 0 ? forwardArr.slice(0, idx + 1) : forwardArr;
                     const back = returnStops.length ? [...returnStops, finalCity, start] : [start];
