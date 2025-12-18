@@ -17,7 +17,7 @@ function useAuth() {
   });
   const login = () => {
     const anyWin = window as any;
-    const g = anyWin.google && anyWin.google.accounts && anyWin.google.accounts.id;
+    const google = anyWin.google;
     const clientId = (import.meta as any).env.VITE_GOOGLE_CLIENT_ID as string | undefined;
     
     if (!clientId) {
@@ -29,33 +29,36 @@ function useAuth() {
       return;
     }
 
-    if (!g) {
+    if (!google || !google.accounts || !google.accounts.oauth2) {
       alert("Google Sign-In script is not loaded yet. Please check your internet connection or ad blockers.");
       return;
     }
     
-    g.initialize({
+    const client = google.accounts.oauth2.initTokenClient({
       client_id: clientId,
-      callback: (resp: any) => {
-        try {
-          const token = resp.credential;
-          if (!token) return;
-          const parts = token.split(".");
-          if (parts.length < 2) return;
-          const payload = JSON.parse(atob(parts[1].replace(/-/g, "+").replace(/_/g, "/")));
-          const u: User = {
-            id: payload.sub,
-            username: payload.name || payload.email || "user",
-            email: payload.email || "",
-            picture: payload.picture,
-          };
-          setUser(u);
-          localStorage.setItem("tripodin_user", JSON.stringify(u));
-        } catch {
+      scope: 'https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email',
+      callback: (response: any) => {
+        if (response.access_token) {
+          fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+            headers: { Authorization: `Bearer ${response.access_token}` },
+          })
+            .then((res) => res.json())
+            .then((data) => {
+              const u: User = {
+                id: data.sub,
+                username: data.name || data.email || "user",
+                email: data.email || "",
+                picture: data.picture,
+              };
+              setUser(u);
+              localStorage.setItem("tripodin_user", JSON.stringify(u));
+            })
+            .catch((err) => console.error("Failed to fetch user info", err));
         }
       },
     });
-    g.prompt();
+    
+    client.requestAccessToken();
   };
   const logout = () => {
     setUser(null);
@@ -69,7 +72,10 @@ function Header({ user, onLogin, onLogout, route, setRoute, onNewChat }: { user:
   return (
     <div className="gradient-header border-b border-slate-200">
       <div className="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-3">
+        <div 
+          className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity" 
+          onClick={onNewChat}
+        >
           <div className="h-8 w-8 rounded-lg bg-primary-500 text-white grid place-items-center">🧭</div>
           <div className="text-lg font-semibold">TripOdin AI-Travel Assistant</div>
         </div>
