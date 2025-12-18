@@ -4,7 +4,7 @@ export default function UpsellModal({ open, onClose }: { open: boolean; onClose:
   useEffect(() => { const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); }; window.addEventListener("keydown", onKey); return () => window.removeEventListener("keydown", onKey); }, [onClose]);
   if (!open) return null;
   return (
-    <div className="fixed inset-0 bg-black/40 grid place-items-center" onClick={onClose}>
+    <div className="fixed inset-0 bg-black/40 grid place-items-center z-[100]" onClick={onClose}>
       <div className="card w-full max-w-md p-4" onClick={(e) => e.stopPropagation()}>
         <div className="text-lg font-semibold">Special Offers</div>
         <div className="text-sm text-slate-600">Tailored recommendations based on your trip.</div>

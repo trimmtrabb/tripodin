@@ -430,68 +430,232 @@ function Dashboard({ origin, dest, onReset }: { origin?: string; dest?: string; 
   const [retOpen, setRetOpen] = useState(false);
   const [selectedCities, setSelectedCities] = useState<string[]>([]);
   const [upsellOpen, setUpsellOpen] = useState(false);
+
+  const tabs = [
+    { id: "overview", label: "Overview", icon: "🏠" },
+    { id: "trips", label: "My Trips", icon: "✈️" },
+    { id: "documents", label: "Documents", icon: "📂" },
+    { id: "profile", label: "Profile", icon: "👤" },
+  ] as const;
+
   return (
-    <div className="mx-auto max-w-6xl px-4 py-6">
-      <div className="flex gap-2 mb-4">
-        {(["overview", "trips", "documents", "profile"] as const).map((t) => (
-          <button key={t} className={`btn ${tab === t ? "btn-primary" : "btn-secondary"}`} onClick={() => setTab(t)}>{t}</button>
-        ))}
+    <div className="mx-auto max-w-6xl px-4 py-8 animate-in fade-in zoom-in duration-500">
+      
+      {/* Header Section */}
+      <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900">Welcome back! 👋</h1>
+          <p className="text-slate-500 mt-1">Ready to plan your next adventure?</p>
+        </div>
+        <div className="flex bg-white p-1 rounded-xl shadow-sm border border-slate-200 overflow-x-auto">
+          {tabs.map(t => (
+            <button
+              key={t.id}
+              onClick={() => setTab(t.id)}
+              className={`px-4 py-2 rounded-lg text-sm font-bold transition-all duration-200 flex items-center gap-2 whitespace-nowrap ${
+                tab === t.id 
+                ? "bg-blue-600 text-white shadow-md shadow-blue-200" 
+                : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+              }`}
+            >
+              <span>{t.icon}</span>
+              <span>{t.label}</span>
+            </button>
+          ))}
+        </div>
       </div>
-      <div className="card p-4">
-        {tab === "overview" ? (
-          <div>
-            <div className="font-medium mb-2">Quick Actions</div>
-            <div className="flex gap-2">
-              <button className="btn btn-primary" onClick={() => setFlightOpen(true)}>Flights</button>
-              <button className="btn btn-secondary" onClick={() => setHotelOpen(true)}>Hotels</button>
-              <button className="btn btn-secondary" onClick={() => setInsOpen(true)}>Insurance</button>
-              <button className="btn btn-secondary" onClick={() => setMultiOpen(true)}>Multi-City</button>
-              <button className="btn btn-secondary" onClick={() => setUpsellOpen(true)}>Special Offers</button>
-            </div>
-          </div>
-        ) : tab === "trips" ? (
-          <div>
-            <div className="font-medium mb-2">My Trips</div>
-            <div className="text-sm text-slate-600">Trips will appear here grouped by destination.</div>
-          </div>
-        ) : tab === "documents" ? (
-          <div>
-            <div className="font-medium mb-2">Documents</div>
-            <div className="text-sm">Manage flight tickets and hotel vouchers.</div>
-            <div className="mt-2 flex gap-2">
-              <button className="btn btn-secondary">Download Selected</button>
-              <button className="btn btn-secondary">Delete Selected</button>
-            </div>
-          </div>
-        ) : (
-          <div>
-            <div className="font-medium mb-2">Profile</div>
-            <div className="grid md:grid-cols-2 gap-3">
-              <div>
-                <div className="text-sm mb-1">Nationality</div>
-                <input className="w-full border rounded p-2" defaultValue={origin || ""} />
+
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        
+        {/* Main Content */}
+        <div className="lg:col-span-3 space-y-6">
+          
+          {tab === "overview" && (
+            <>
+              {/* Quick Actions Grid */}
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                {[
+                  { title: "Book Flights", icon: "✈️", color: "blue", action: () => setFlightOpen(true), desc: "Find best prices" },
+                  { title: "Find Hotels", icon: "🏨", color: "indigo", action: () => setHotelOpen(true), desc: "Cozy stays" },
+                  { title: "Travel Insurance", icon: "🛡️", color: "emerald", action: () => setInsOpen(true), desc: "Stay protected" },
+                  { title: "Multi-City Trip", icon: "🏙️", color: "purple", action: () => setMultiOpen(true), desc: "Complex routes" },
+                  { title: "Special Offers", icon: "🎁", color: "orange", action: () => setUpsellOpen(true), desc: "Exclusive deals" },
+                ].map((action, i) => (
+                  <button 
+                    key={i}
+                    onClick={action.action}
+                    className={`group relative p-6 bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 text-left overflow-hidden`}
+                  >
+                    <div className={`absolute top-0 right-0 w-24 h-24 bg-${action.color}-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110`} />
+                    <div className={`relative z-10 w-12 h-12 rounded-xl bg-${action.color}-50 text-${action.color}-600 flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform duration-300`}>
+                      {action.icon}
+                    </div>
+                    <h3 className="relative z-10 font-bold text-slate-900 group-hover:text-blue-700 transition-colors">{action.title}</h3>
+                    <p className="relative z-10 text-xs text-slate-500 mt-1">{action.desc}</p>
+                  </button>
+                ))}
               </div>
-              <div>
-                <div className="text-sm mb-1">Destination</div>
-                <input className="w-full border rounded p-2" defaultValue={dest || ""} />
+
+              {/* Visa Section Embed */}
+              <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+                   <h2 className="font-bold text-lg text-slate-800 flex items-center gap-2">
+                     <span>🛂</span> Visa Requirements
+                   </h2>
+                   <span className="text-xs font-medium bg-blue-100 text-blue-700 px-2 py-1 rounded">
+                     {origin || "UK"} → {dest || "France"}
+                   </span>
+                </div>
+                <div className="p-6">
+                   <VisaUI origin={origin || "United Kingdom"} dest={dest || "France"} />
+                </div>
+              </div>
+            </>
+          )}
+
+          {tab === "trips" && (
+             <div className="space-y-4">
+               <div className="bg-white rounded-2xl p-8 text-center border border-slate-100 shadow-sm min-h-[400px] flex flex-col items-center justify-center">
+                  <div className="w-24 h-24 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl shadow-inner">✈️</div>
+                  <h2 className="text-2xl font-bold text-slate-900 mb-2">No Upcoming Trips</h2>
+                  <p className="text-slate-500 max-w-md mx-auto mb-8">You haven't booked any trips yet. Start planning your next adventure today and manage everything in one place.</p>
+                  <button onClick={onReset} className="btn btn-primary px-8 py-3 rounded-full shadow-lg shadow-blue-200 hover:shadow-blue-300 transform hover:-translate-y-1 transition-all">Plan a New Trip</button>
+               </div>
+             </div>
+          )}
+
+          {tab === "documents" && (
+            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden min-h-[400px]">
+              <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                <h2 className="font-bold text-lg text-slate-800">Travel Documents</h2>
+                <div className="flex gap-2">
+                  <button className="text-xs font-bold text-slate-500 hover:text-blue-600 px-3 py-1.5 bg-white border border-slate-200 rounded-lg transition-colors shadow-sm">Select All</button>
+                  <button className="text-xs font-bold text-red-500 hover:text-red-600 px-3 py-1.5 bg-red-50 border border-red-100 rounded-lg transition-colors">Delete</button>
+                </div>
+              </div>
+              <div className="p-12 text-center flex flex-col items-center justify-center h-full mt-10">
+                <div className="text-6xl mb-6 opacity-20">📂</div>
+                <h3 className="text-lg font-medium text-slate-900 mb-2">No documents saved yet</h3>
+                <p className="text-slate-500 text-sm max-w-sm">Book a flight or hotel to automatically save your tickets and vouchers here.</p>
               </div>
             </div>
-            <div className="mt-3 flex gap-2">
-              <button className="btn btn-secondary" onClick={() => {
-                const data = { origin, dest };
-                const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement("a");
-                a.href = url; a.download = "tripodin-profile.json"; a.click();
-                URL.revokeObjectURL(url);
-              }}>Export Data</button>
-              <button className="btn btn-secondary" onClick={onReset}>Reset Profile</button>
-              <button className="btn btn-secondary" onClick={() => { alert("Account deleted"); onReset(); }}>Delete Account</button>
+          )}
+
+          {tab === "profile" && (
+            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-8">
+              <div className="flex items-center justify-between mb-8">
+                  <h2 className="font-bold text-xl text-slate-800">Profile Settings</h2>
+                  <div className="flex gap-2">
+                      <button className="px-4 py-2 text-sm font-medium text-slate-600 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors" onClick={() => {
+                        const data = { origin, dest };
+                        const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement("a");
+                        a.href = url; a.download = "tripodin-profile.json"; a.click();
+                        URL.revokeObjectURL(url);
+                      }}>Export Data</button>
+                      <button className="px-4 py-2 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors" onClick={() => { alert("Account deleted"); onReset(); }}>Delete Account</button>
+                  </div>
+              </div>
+              
+              <div className="grid md:grid-cols-2 gap-8">
+                <div className="space-y-6">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Nationality</label>
+                    <div className="relative group">
+                      <span className="absolute left-3 top-3 text-lg opacity-50 group-hover:opacity-100 transition-opacity">🏳️</span>
+                      <input className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none transition-all font-medium text-slate-700" defaultValue={origin || ""} placeholder="Select country..." />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Preferred Destination</label>
+                    <div className="relative group">
+                      <span className="absolute left-3 top-3 text-lg opacity-50 group-hover:opacity-100 transition-opacity">📍</span>
+                      <input className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none transition-all font-medium text-slate-700" defaultValue={dest || ""} placeholder="Select country..." />
+                    </div>
+                  </div>
+                </div>
+                <div className="space-y-6">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Email Address</label>
+                    <input className="w-full px-4 py-3 bg-slate-100 border border-slate-200 rounded-xl text-slate-500 font-medium cursor-not-allowed" value="user@example.com" disabled />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Travel Preferences</label>
+                    <div className="flex flex-wrap gap-2">
+                      {["Vegetarian", "Window Seat", "Non-Smoking", "Luxury Stays"].map(p => (
+                        <span key={p} className="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-xs font-bold border border-blue-100 cursor-pointer hover:bg-blue-100 transition-colors">{p}</span>
+                      ))}
+                      <button className="px-3 py-1.5 bg-white text-slate-500 rounded-lg text-xs font-bold border border-slate-200 hover:bg-slate-50 hover:text-slate-700 transition-colors border-dashed">+ Add Preference</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="mt-8 pt-8 border-t border-slate-100 flex justify-end gap-3">
+                 <button className="px-6 py-2.5 text-slate-600 font-bold hover:bg-slate-50 rounded-xl transition-colors" onClick={onReset}>Cancel</button>
+                 <button className="btn btn-primary px-8 py-2.5 rounded-xl shadow-lg shadow-blue-200">Save Changes</button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Sidebar / Right Panel */}
+        <div className="space-y-6">
+          {/* Upgrade Card */}
+          <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl p-6 text-white shadow-xl shadow-blue-200/50 relative overflow-hidden group cursor-pointer transform hover:-translate-y-1 transition-all duration-300" onClick={() => setUpsellOpen(true)}>
+            <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl group-hover:scale-150 transition-transform duration-700" />
+            <div className="relative z-10">
+              <div className="flex items-center gap-2 mb-3">
+                 <span className="text-xs font-bold uppercase tracking-widest bg-white/20 px-2 py-1 rounded backdrop-blur-sm">Pro Member</span>
+                 <span className="text-xs bg-yellow-400 text-yellow-900 px-1.5 py-0.5 rounded font-bold">NEW</span>
+              </div>
+              <h3 className="text-2xl font-bold mb-2">Upgrade to Premium</h3>
+              <p className="text-blue-100 text-sm mb-6 leading-relaxed">Get exclusive deals, 24/7 concierge support, and 5% cashback on all bookings.</p>
+              <button className="w-full py-3 bg-white text-blue-700 font-bold rounded-xl hover:bg-blue-50 transition-colors shadow-lg flex items-center justify-center gap-2">
+                <span>View Plans</span>
+                <span>→</span>
+              </button>
             </div>
           </div>
-        )}
+
+          {/* Wallet Card */}
+          <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+            <div className="flex justify-between items-start mb-4">
+               <div>
+                  <h3 className="font-bold text-slate-800 text-sm uppercase tracking-wide">Wallet Balance</h3>
+                  <p className="text-xs text-slate-400">Available funds</p>
+               </div>
+               <div className="p-2 bg-slate-50 rounded-lg text-xl">💳</div>
+            </div>
+            <div className="text-3xl font-extrabold text-slate-900 mb-6 tracking-tight">$0.00</div>
+            <button className="w-full py-2.5 text-sm font-bold text-blue-600 bg-blue-50 rounded-xl hover:bg-blue-100 transition-colors flex items-center justify-center gap-2">
+               <span>+</span> Add Funds
+            </button>
+          </div>
+          
+          {/* Quick Stats (Placeholder) */}
+          <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+             <h3 className="font-bold text-slate-800 text-sm uppercase tracking-wide mb-4">Travel Stats</h3>
+             <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                   <span className="text-sm text-slate-600">Countries Visited</span>
+                   <span className="font-bold text-slate-900">0</span>
+                </div>
+                <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                   <div className="bg-blue-500 h-full w-[5%] rounded-full" />
+                </div>
+                 <div className="flex items-center justify-between">
+                   <span className="text-sm text-slate-600">Total Miles</span>
+                   <span className="font-bold text-slate-900">0</span>
+                </div>
+                <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                   <div className="bg-indigo-500 h-full w-[2%] rounded-full" />
+                </div>
+             </div>
+          </div>
+        </div>
       </div>
-      <VisaUI origin={origin || "United Kingdom"} dest={dest || "France"} />
+
       <FlightModal open={flightOpen} onClose={() => setFlightOpen(false)} originCountry={origin || "United Kingdom"} destCountry={dest || "France"} />
       <HotelModal open={hotelOpen} onClose={() => setHotelOpen(false)} destCountry={dest || "France"} />
       <InsuranceModal open={insOpen} onClose={() => setInsOpen(false)} originCountry={origin || "United Kingdom"} destCountry={dest || "France"} />

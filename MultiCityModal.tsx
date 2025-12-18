@@ -89,7 +89,7 @@ export default function MultiCityModal({ open, onClose, originCountry, destCount
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/40 grid place-items-center" onClick={onClose}>
+    <div className="fixed inset-0 bg-black/40 grid place-items-center z-[100]" onClick={onClose}>
       <div className="bp-card w-full max-w-3xl" onClick={(e) => e.stopPropagation()}>
         <div className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-4 flex justify-between items-center shrink-0">
           <div>
@@ -244,7 +244,7 @@ export function ReturnFromModal({ open, onClose, cities, onSelect }: { open: boo
   useEffect(() => { const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); }; window.addEventListener("keydown", onKey); return () => window.removeEventListener("keydown", onKey); }, [onClose]);
   if (!open) return null;
   return (
-    <div className="fixed inset-0 bg-black/40 grid place-items-center" onClick={onClose}>
+    <div className="fixed inset-0 bg-black/40 grid place-items-center z-[100]" onClick={onClose}>
       <div className="card w-full max-w-md p-4" onClick={(e) => e.stopPropagation()}>
         <div className="text-lg font-semibold mb-2">Return From City</div>
         <select className="w-full border rounded p-2" value={c} onChange={(e) => setC(e.target.value)}>

@@ -46,7 +46,7 @@ export function FlightModal({ open, onClose, originCountry, destCountry, totalSt
   }, [onClose]);
   if (!open) return null;
   return (
-    <div className="fixed inset-0 bg-black/40 grid place-items-center" onClick={onClose}>
+    <div className="fixed inset-0 bg-black/40 grid place-items-center z-[100]" onClick={onClose}>
       <div className="card w-full max-w-2xl p-4 relative" onClick={(e) => e.stopPropagation()}>
         <button 
           className="absolute top-4 right-4 text-slate-400 hover:text-slate-600" 
@@ -183,7 +183,7 @@ export function HotelModal({ open, onClose, destCountry }: { open: boolean; onCl
   }, [onClose]);
   if (!open) return null;
   return (
-    <div className="fixed inset-0 bg-black/40 grid place-items-center" onClick={onClose}>
+    <div className="fixed inset-0 bg-black/40 grid place-items-center z-[100]" onClick={onClose}>
       <div className="card w-full max-w-2xl p-4 relative" onClick={(e) => e.stopPropagation()}>
         <button 
           className="absolute top-4 right-4 text-slate-400 hover:text-slate-600" 
@@ -266,7 +266,7 @@ export function InsuranceModal({ open, onClose, originCountry, destCountry, tota
   }, [onClose]);
   if (!open) return null;
   return (
-    <div className="fixed inset-0 bg-black/40 grid place-items-center" onClick={onClose}>
+    <div className="fixed inset-0 bg-black/40 grid place-items-center z-[100]" onClick={onClose}>
       <div className="card w-full max-w-2xl p-4" onClick={(e) => e.stopPropagation()}>
         <div className="text-xl font-semibold mb-2">Visa-Compliant Travel Insurance</div>
         <div className="grid md:grid-cols-2 gap-3">
