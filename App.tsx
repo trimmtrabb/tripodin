@@ -7,7 +7,7 @@ import { NoVisaBubble, SelectCitiesBubble, InfoBubble, UpsellBubble } from "./Ch
 import { isVisaFree, getAllCountries } from "./visaEngine";
 import { getCities } from "./cityData";
 
-type User = { id: string; username: string; email: string } | null;
+type User = { id: string; username: string; email: string; picture?: string } | null;
 type Route = "chat" | "dashboard";
 
 function useAuth() {
@@ -15,9 +15,47 @@ function useAuth() {
     const raw = localStorage.getItem("tripodin_user");
     return raw ? JSON.parse(raw) : null;
   });
-  const login = (u: User) => {
-    setUser(u);
-    localStorage.setItem("tripodin_user", JSON.stringify(u));
+  const login = () => {
+    const anyWin = window as any;
+    const g = anyWin.google && anyWin.google.accounts && anyWin.google.accounts.id;
+    const clientId = (import.meta as any).env.VITE_GOOGLE_CLIENT_ID as string | undefined;
+    
+    if (!clientId) {
+      if (confirm("Configuration Error: Google Client ID is missing (VITE_GOOGLE_CLIENT_ID).\n\nWould you like to use the insecure test login for now?")) {
+         const u = { id: "test-user", username: "Test User", email: "test@example.com" };
+         setUser(u);
+         localStorage.setItem("tripodin_user", JSON.stringify(u));
+      }
+      return;
+    }
+
+    if (!g) {
+      alert("Google Sign-In script is not loaded yet. Please check your internet connection or ad blockers.");
+      return;
+    }
+    
+    g.initialize({
+      client_id: clientId,
+      callback: (resp: any) => {
+        try {
+          const token = resp.credential;
+          if (!token) return;
+          const parts = token.split(".");
+          if (parts.length < 2) return;
+          const payload = JSON.parse(atob(parts[1].replace(/-/g, "+").replace(/_/g, "/")));
+          const u: User = {
+            id: payload.sub,
+            username: payload.name || payload.email || "user",
+            email: payload.email || "",
+            picture: payload.picture,
+          };
+          setUser(u);
+          localStorage.setItem("tripodin_user", JSON.stringify(u));
+        } catch {
+        }
+      },
+    });
+    g.prompt();
   };
   const logout = () => {
     setUser(null);
@@ -26,7 +64,7 @@ function useAuth() {
   return { user, login, logout };
 }
 
-function Header({ user, onLogin, onLogout, route, setRoute, onNewChat }: { user: User; onLogin: (u: User) => void; onLogout: () => void; route: Route; setRoute: (r: Route) => void; onNewChat: () => void }) {
+function Header({ user, onLogin, onLogout, route, setRoute, onNewChat }: { user: User; onLogin: () => void; onLogout: () => void; route: Route; setRoute: (r: Route) => void; onNewChat: () => void }) {
   const [lang, setLang] = useState("en");
   return (
     <div className="gradient-header border-b border-slate-200">
@@ -45,8 +83,8 @@ function Header({ user, onLogin, onLogout, route, setRoute, onNewChat }: { user:
           <button className="btn btn-secondary" onClick={onNewChat}>New chat</button>
           {!user ? (
             <>
-              <button className="btn btn-secondary" onClick={() => onLogin({ id: crypto.randomUUID(), username: "demo", email: "demo@example.com" })}>Log in</button>
-              <button className="btn btn-primary" onClick={() => onLogin({ id: crypto.randomUUID(), username: "demo", email: "demo@example.com" })}>Sign Up</button>
+              <button className="btn btn-secondary" onClick={onLogin}>Log in with Google</button>
+              <button className="btn btn-primary" onClick={onLogin}>Sign Up with Google</button>
             </>
           ) : (
             <>
