@@ -53,6 +53,7 @@ export function SelectCitiesBubble({ originCountry, destCountry, onContinue }: {
   const [editingReturns, setEditingReturns] = useState<{[key: number]: boolean}>({});
   const [transportModes, setTransportModes] = useState<{[key: number]: "flight" | "train" | "car"}>({});
   const [mapError, setMapError] = useState<boolean>(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const label = from && to ? `Continue with ${from} → ${to}` : "Continue";
   const mLabel = start && first ? `Plan Multi‑city with ${start} → ${first}` : "Continue";
   const names = React.useMemo(() => [start, first, ...extra].filter(Boolean), [start, first, extra]);
@@ -504,29 +505,64 @@ export function SelectCitiesBubble({ originCountry, destCountry, onContinue }: {
         <div>
           <div className="font-semibold mb-1">Multi‑city Adventure 🌍</div>
           <div className="text-sm text-slate-700 mb-2">Your journey awaits — pick cities and stays ✨</div>
-          <div className="grid md:grid-cols-3 gap-3">
+          <div className="grid md:grid-cols-2 gap-6 mb-4">
             <div>
-              <div className="text-xs mb-1 text-blue-700">🛫 Departure</div>
-              <select className="w-full border rounded p-2" value={start} onChange={(e) => setStart(e.target.value)}>
-                {originCities.map((c) => (<option key={c.name} value={c.name}>{c.name}</option>))}
-              </select>
+              <div className="flex items-center gap-2 mb-2">
+                 <div className="w-3 h-3 bg-blue-500 rounded-full shadow-sm" />
+                 <span className="text-xs font-bold text-blue-900 tracking-wider uppercase">DEPARTURE:</span>
+              </div>
+              <div className="relative">
+                <select 
+                  className="w-full pl-4 pr-10 py-3 bg-white border border-slate-200 rounded-xl appearance-none focus:ring-2 focus:ring-blue-500 outline-none transition-all shadow-sm text-lg font-medium text-slate-700"
+                  value={start} 
+                  onChange={(e) => setStart(e.target.value)}
+                >
+                  {originCities.map((c) => (<option key={c.name} value={c.name}>{c.name}</option>))}
+                </select>
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">▼</div>
+              </div>
             </div>
+
             <div>
-              <div className="text-xs mb-1 text-green-700">🛬 Arrival</div>
-              <div className="flex items-center gap-2">
-                <select className="flex-1 border rounded p-2" value={first} onChange={(e) => setFirst(e.target.value)}>
+              <div className="flex items-center gap-2 mb-2">
+                 <div className="w-3 h-3 bg-green-500 rounded-full shadow-sm" />
+                 <span className="text-xs font-bold text-green-900 tracking-wider uppercase">ARRIVAL:</span>
+              </div>
+              <div className="relative mb-2">
+                 <select 
+                  className="w-full pl-4 pr-10 py-3 bg-white border border-slate-200 rounded-xl appearance-none focus:ring-2 focus:ring-green-500 outline-none transition-all shadow-sm text-lg font-medium text-slate-700"
+                  value={first} 
+                  onChange={(e) => setFirst(e.target.value)}
+                >
                   {destCities.map((c) => (<option key={c.name} value={c.name}>{c.name}</option>))}
                 </select>
-                <TransportSelector idx={0} from={start} to={first} />
-                {planReturn && finalCity !== first ? (
-                  <button className="pill" onClick={() => { setFinalCity(first); setReturnStops([]); setReturnFilters([]); }}>Mark as Final</button>
-                ) : null}
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">▼</div>
               </div>
-              {finalCity === first ? (<div className="text-xs text-blue-700 mt-1">Final</div>) : null}
-            </div>
-            <div>
-              <div className="text-xs mb-1">🕒 Stay (days)</div>
-              <input className="w-full border rounded p-2" type="number" min={1} value={firstDays} onChange={(e) => setFirstDays(Number(e.target.value))} />
+              
+              <div className="flex items-center justify-between bg-slate-50 p-2 rounded-lg border border-slate-100">
+                <div className="flex items-center gap-2">
+                   <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">Transport</span>
+                   <TransportSelector idx={0} from={start} to={first} />
+                </div>
+                <div>
+                   <span className="text-xs font-medium text-slate-500 uppercase tracking-wider mr-2">Stay</span>
+                   <input 
+                      className="w-16 border rounded p-1 text-center text-sm font-semibold" 
+                      type="number" 
+                      min={1} 
+                      value={firstDays} 
+                      onChange={(e) => setFirstDays(Number(e.target.value))} 
+                   />
+                   <span className="text-xs text-slate-400 ml-1">days</span>
+                </div>
+              </div>
+              
+              {planReturn && finalCity !== first ? (
+                 <div className="mt-2 text-right">
+                    <button className="text-xs text-blue-600 hover:underline" onClick={() => { setFinalCity(first); setReturnStops([]); setReturnFilters([]); }}>Mark as Final Return City</button>
+                 </div>
+               ) : null}
+               {finalCity === first ? (<div className="text-xs text-blue-700 mt-1 font-medium text-right">✓ Marked as Final City</div>) : null}
             </div>
           </div>
           {extra.map((city, idx) => (
@@ -886,13 +922,83 @@ export function SelectCitiesBubble({ originCountry, destCountry, onContinue }: {
                   })()}
                 </div>
               ) : null}
+              {/* Unified Return Trip Planning UI */}
               {planReturn && finalCity ? (
-                <div className="text-sm text-blue-700 mt-1">
-                  Return flight planned: {finalCity} → {start}{finalCity !== first ? " · You’ll return from a different city" : ""}
+                <div className="mt-4 bg-white rounded-xl border border-blue-200 shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-2">
+                  <div className="bg-blue-50/50 px-4 py-3 border-b border-blue-100 flex justify-between items-center">
+                     <div className="text-sm font-bold text-blue-900 flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-blue-600"></span>
+                        Plan Your Return Journey
+                     </div>
+                     <div className="text-xs text-blue-600 font-medium px-2 py-1 bg-blue-100 rounded-full">
+                        Select Transport
+                     </div>
+                  </div>
+                  
+                  <div className="p-3 space-y-0 divide-y divide-slate-100">
+                     {(() => {
+                         // Identify legs that are part of the return journey
+                         const forwardLegsCount = Math.max(0, names.length - 1);
+                         const totalLegs = points.length - 1;
+                         
+                         const returnLegs = [];
+                         for (let i = forwardLegsCount; i < totalLegs; i++) {
+                             returnLegs.push(i);
+                         }
+                         
+                         if (returnLegs.length === 0) {
+                            return (
+                                <div className="py-4 text-center text-sm text-slate-500 italic">
+                                    Route not calculated yet. Please select return city.
+                                </div>
+                            );
+                         }
+
+                         return returnLegs.map((idx) => {
+                             const p = points[idx];
+                             const q = points[idx + 1];
+                             if (!p || !q) return null;
+                             
+                             const cityA = find(p.name);
+                             const cityB = find(q.name);
+                             const dist = (cityA && cityB) ? distanceKm(cityA, cityB).toFixed(0) : "?";
+
+                             const mode = getMode(idx, p.name, q.name);
+                             
+                             return (
+                               <div key={idx} className="py-3 flex items-center justify-between group hover:bg-slate-50 transition-colors -mx-3 px-3">
+                                 <div className="flex-1 min-w-0 mr-4">
+                                     <div className="flex items-center gap-2 mb-1">
+                                         <span className="text-sm font-bold text-slate-800 truncate">{p.name}</span>
+                                         <span className="text-slate-400">→</span>
+                                         <span className="text-sm font-bold text-slate-800 truncate">{q.name}</span>
+                                     </div>
+                                     <div className="text-xs text-slate-500 flex items-center gap-1.5">
+                                         <span className={`inline-flex items-center gap-1 font-medium px-1.5 py-0.5 rounded ${mode === 'flight' ? 'bg-blue-100 text-blue-700' : (mode === 'train' ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700')}`}>
+                                            {mode === 'flight' ? '✈️ Flight' : (mode === 'train' ? '🚆 Train' : '🚗 Car')}
+                                         </span>
+                                         <span className="text-slate-300">|</span>
+                                         <span>{dist} km</span>
+                                     </div>
+                                 </div>
+                                 <div className="shrink-0">
+                                    <TransportSelector idx={idx} from={p.name} to={q.name} />
+                                 </div>
+                               </div>
+                             );
+                         });
+                     })()}
+                  </div>
+                  
+                  {finalCity !== first && (
+                     <div className="px-4 py-3 bg-amber-50 text-amber-800 text-xs border-t border-amber-100 flex items-start gap-2">
+                        <span className="mt-0.5 text-amber-600">ℹ️</span>
+                        <span className="font-medium">Open-jaw return: You are returning from {finalCity} instead of {first}.</span>
+                     </div>
+                  )}
                 </div>
-              ) : (
-                <div className="text-sm text-slate-600 mt-1">Enable “Plan return” to add a return flight</div>
-              )}
+              ) : null}
+
               {(() => {
                 const selectedDestCities = [first, ...extra].filter(Boolean);
                 const uniqueCount = new Set(selectedDestCities.map((n) => n.toLowerCase())).size;
@@ -912,8 +1018,11 @@ export function SelectCitiesBubble({ originCountry, destCountry, onContinue }: {
             </div>
             {points.length > 1 ? (
               <div className="mt-3">
-                <div className="text-xs text-slate-500 mb-1">Compact route map</div>
-                <svg viewBox="0 0 360 140" width="100%" height="140" className="rounded border border-slate-200 bg-white">
+                <div className="flex justify-between items-center mb-1">
+                  <div className="text-xs text-slate-500">Compact route map</div>
+                </div>
+                <div className="relative group">
+                  <svg viewBox="0 0 360 140" width="100%" height="140" className="rounded border border-slate-200 bg-white">
                   {countryBounds && tileImages.length > 0 ? (
                     <g transform={`translate(${MAP_PAD},${MAP_PAD})`}>
                       {tileImages.map((t, i) => (
@@ -989,12 +1098,14 @@ export function SelectCitiesBubble({ originCountry, destCountry, onContinue }: {
                         strokeDasharray={seg.mode === "flight" ? "6 4" : (seg.mode === "train" ? "8 2" : "none")}
                         filter="url(#routeShadow)"
                       />
+                      {/* Transport Icon Background */}
+                      <circle cx={seg.mx} cy={seg.my} r="10" fill="white" stroke="#e2e8f0" strokeWidth="1" filter="url(#dotShadow)" />
                       <use
                         href={seg.mode === "flight" ? "#planeIcon" : (seg.mode === "train" ? "#trainIcon" : "#carIcon")}
-                        x={seg.mx - 12}
-                        y={seg.my - 12}
-                        width="24"
-                        height="24"
+                        x={seg.mx - 10}
+                        y={seg.my - 10}
+                        width="20"
+                        height="20"
                         fill={seg.mode === "flight" ? "#1d4ed8" : (seg.mode === "train" ? "#ca8a04" : "#1e40af")}
                         transform={seg.mode === "flight" ? `rotate(${seg.angle + 90}, ${seg.mx}, ${seg.my})` : ""}
                       />
@@ -1028,66 +1139,267 @@ export function SelectCitiesBubble({ originCountry, destCountry, onContinue }: {
                       }
                     });
 
-                    return Array.from(uniqueLabels.values()).map((item) => {
+                    const items = Array.from(uniqueLabels.values());
+                    // Keep track of placed labels to avoid overlapping them
+                    const placedRects: { x: number; y: number; w: number; h: number }[] = [];
+
+                    return items.map((item) => {
                       const { x, y, name, label, idx } = item;
                       
-                      // Smart positioning to avoid overlap with lines
-                      let dx = 0; let dy = -12;
-                      let anchor = "middle";
+                      // Smart positioning to avoid overlap
+                      const distToSegment = (px: number, py: number, x1: number, y1: number, x2: number, y2: number) => {
+                        const A = px - x1;
+                        const B = py - y1;
+                        const C = x2 - x1;
+                        const D = y2 - y1;
+                        const dot = A * C + B * D;
+                        const len_sq = C * C + D * D;
+                        let param = -1;
+                        if (len_sq !== 0) param = dot / len_sq;
+                        let xx, yy;
+                        if (param < 0) { xx = x1; yy = y1; }
+                        else if (param > 1) { xx = x2; yy = y2; }
+                        else { xx = x1 + param * C; yy = y1 + param * D; }
+                        const dx = px - xx;
+                        const dy = py - yy;
+                        return Math.sqrt(dx * dx + dy * dy);
+                      };
+
+                      const candidates = [
+                        { dx: 0, dy: -1, a: "middle" },    // N
+                        { dx: 0, dy: 1, a: "middle" },     // S
+                        { dx: 1, dy: 0, a: "start" },      // E
+                        { dx: -1, dy: 0, a: "end" },       // W
+                        { dx: 0.707, dy: -0.707, a: "start" }, // NE
+                        { dx: -0.707, dy: -0.707, a: "end" },  // NW
+                        { dx: 0.707, dy: 0.707, a: "start" },  // SE
+                        { dx: -0.707, dy: 0.707, a: "end" },   // SW
+                      ];
                       
+                      // Add bisector strategy for corners
                       const prev = points[idx - 1];
                       const next = points[idx + 1];
-                      
-                      let vx = 0; let vy = 0;
-                      
-                      if (prev) {
-                        vx += (prev.x - x);
-                        vy += (prev.y - y);
+                      if (prev && next) {
+                         const vx1 = prev.x - x;
+                         const vy1 = prev.y - y;
+                         const len1 = Math.sqrt(vx1*vx1 + vy1*vy1);
+                         
+                         const vx2 = next.x - x;
+                         const vy2 = next.y - y;
+                         const len2 = Math.sqrt(vx2*vx2 + vy2*vy2);
+                         
+                         if (len1 > 0 && len2 > 0) {
+                            // Bisector of the "inside" angle
+                            const bx = (vx1/len1) + (vx2/len2);
+                            const by = (vy1/len1) + (vy2/len2);
+                            const blen = Math.sqrt(bx*bx + by*by);
+                            
+                            if (blen > 0.1) {
+                                // Point AWAY from the bisector (outside the turn)
+                                const dirX = -(bx / blen);
+                                const dirY = -(by / blen);
+                                
+                                let anchor = "middle";
+                                if (dirX > 0.3) anchor = "start";
+                                else if (dirX < -0.3) anchor = "end";
+                                
+                                candidates.push({ dx: dirX, dy: dirY, a: anchor });
+                            }
+                         }
                       }
-                      if (next) {
-                        vx += (next.x - x);
-                        vy += (next.y - y);
+
+                      let bestScore = -Infinity;
+                      let bestDx = 0;
+                      let bestDy = -15;
+                      let anchor = "middle";
+                      
+                      const labelW = label.length * 8; // Increased width estimate
+                      const labelH = 14; // Approx height
+
+                      // Try all directions
+                      for (const cand of candidates) {
+                        const dist = 24; // Increased distance from dot center
+                        const tx = x + cand.dx * dist;
+                        const ty = y + cand.dy * dist;
+
+                        // Calculate label bounding box
+                        let lx = tx;
+                        if (cand.a === "end") lx = tx - labelW;
+                        else if (cand.a === "middle") lx = tx - labelW / 2;
+                        const ly = ty - labelH / 2;
+                        
+                        // Checkpoints on the label box (corners + center)
+                        const checks = [
+                            { cx: lx, cy: ly },
+                            { cx: lx + labelW, cy: ly },
+                            { cx: lx, cy: ly + labelH },
+                            { cx: lx + labelW, cy: ly + labelH },
+                            { cx: lx + labelW/2, cy: ly + labelH/2 }
+                        ];
+
+                        // 1. Penalty for being out of bounds
+                        if (lx < 5 || lx + labelW > 355 || ly < 5 || ly + labelH > 135) continue;
+
+                        // 2. Calculate min distance to any route segment (line) AND transport icons
+                        let minDistLine = Infinity;
+                        let minDistIcon = Infinity;
+                        
+                        // Check vs Lines
+                        for (let k = 0; k < points.length - 1; k++) {
+                           const p1 = points[k];
+                           const p2 = points[k+1];
+                           
+                           // Check all checkpoints against this segment
+                           for (const cp of checks) {
+                               const d = distToSegment(cp.cx, cp.cy, p1.x, p1.y, p2.x, p2.y);
+                               if (d < minDistLine) minDistLine = d;
+                           }
+                        }
+                        
+                        // Check vs Transport Icons (midpoints)
+                        for (const seg of routeSegments) {
+                            for (const cp of checks) {
+                                const d = Math.sqrt((seg.mx - cp.cx) ** 2 + (seg.my - cp.cy) ** 2);
+                                if (d < minDistIcon) minDistIcon = d;
+                            }
+                        }
+
+                        // 3. Calculate min distance to any other point
+                        let minDistPoint = Infinity;
+                        for (let k = 0; k < points.length; k++) {
+                           if (k === idx) continue;
+                           const pt = points[k];
+                           // Check all checkpoints
+                           for (const cp of checks) {
+                               const d = Math.sqrt((pt.x - cp.cx) ** 2 + (pt.y - cp.cy) ** 2);
+                               if (d < minDistPoint) minDistPoint = d;
+                           }
+                        }
+                        
+                        // 4. Check overlap with existing labels
+                        let overlapsLabel = false;
+                        for (const r of placedRects) {
+                            if (lx < r.x + r.w && lx + labelW > r.x &&
+                                ly < r.y + r.h && ly + labelH > r.y) {
+                                overlapsLabel = true;
+                                break;
+                            }
+                        }
+
+                        // Score logic
+                        // Base score: min distance to lines/points/icons
+                        let score = Math.min(minDistLine, minDistPoint, minDistIcon - 5); // -5 penalty to give icons extra space
+                        
+                        // Heavy penalty for label overlap
+                        if (overlapsLabel) score -= 1000;
+                        
+                        // Penalty for being VERY close to a line (touching)
+                        if (score < 5) score -= 500; 
+                        
+                        // Penalty for being close to an icon
+                        if (minDistIcon < 15) score -= 200;
+
+                        if (score > bestScore) {
+                           bestScore = score;
+                           bestDx = cand.dx * dist;
+                           bestDy = cand.dy * dist;
+                           anchor = cand.a;
+                        }
                       }
                       
-                      // Normalize
-                      const len = Math.sqrt(vx*vx + vy*vy);
-                      if (len > 0.1) {
-                        vx /= len; vy /= len;
-                      } else {
-                        // Default up if isolated or zero vector
-                        vx = 0; vy = 1; // Points down relative to node, so -vy is up
-                      }
+                      const dx = bestDx;
+                      const dy = bestDy;
                       
-                      // Invert to point away from the "average neighbor direction"
-                      let dirX = -vx; let dirY = -vy;
-                      
-                      // Push out by fixed distance
-                      const dist = 16;
-                      dx = dirX * dist;
-                      dy = dirY * dist;
-                      
-                      // Refine anchor based on direction
-                      if (dirX > 0.3) anchor = "start";
-                      else if (dirX < -0.3) anchor = "end";
-                      
-                      // Clamp to map edges
-                      if (x + dx < 10) { dx = 10 - x; anchor = "start"; }
-                      else if (x + dx > 350) { dx = 350 - x; anchor = "end"; }
-                      
-                      if (y + dy < 15) { dy = 15 - y; }
-                      else if (y + dy > 130) { dy = 130 - y; }
+                      // Register this label's position
+                      let finalLx = x + dx;
+                      if (anchor === "end") finalLx -= labelW;
+                      else if (anchor === "middle") finalLx -= labelW / 2;
+                      placedRects.push({ x: finalLx, y: y + dy - labelH/2, w: labelW, h: labelH });
                       
                       return (
                         <g key={`lbl-${name}`}>
-                           <text x={x + dx} y={y + dy} fontSize="11" fontWeight="600" textAnchor={anchor as any} stroke="white" strokeWidth="4" strokeLinejoin="round" fill="none" opacity="0.8">{label}</text>
+                           <rect x={finalLx - 2} y={y + dy - labelH/2 - 1} width={labelW + 4} height={labelH + 2} rx="2" fill="white" fillOpacity="0.85" />
                            <text x={x + dx} y={y + dy} fontSize="11" fontWeight="600" textAnchor={anchor as any} fill="#0f172a">{label}</text>
                         </g>
                       );
                     });
                   })()}
-                </svg>
+                  </svg>
+                  <button
+                    onClick={() => setIsEditModalOpen(true)}
+                    className="absolute top-2 right-2 bg-white/90 hover:bg-white text-slate-700 border border-slate-200 shadow-sm rounded-md px-2 py-1 text-xs font-medium flex items-center gap-1 transition-all backdrop-blur-sm opacity-0 group-hover:opacity-100"
+                  >
+                    ✎ Edit Stops
+                  </button>
+                </div>
               </div>
             ) : null}
+            {isEditModalOpen && (
+              <div className="fixed inset-0 bg-black/50 z-[100] grid place-items-center p-4 animate-in fade-in duration-200" onClick={() => setIsEditModalOpen(false)}>
+                <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden" onClick={e => e.stopPropagation()}>
+                  <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                    <h3 className="font-bold text-slate-800">Edit Trip Duration</h3>
+                    <button onClick={() => setIsEditModalOpen(false)} className="w-8 h-8 rounded-full hover:bg-slate-100 grid place-items-center text-slate-500">✕</button>
+                  </div>
+                  <div className="p-4 max-h-[60vh] overflow-y-auto">
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 grid place-items-center text-sm font-bold shrink-0">1</div>
+                            <div className="flex-1">
+                                <div className="font-medium text-slate-900">{first}</div>
+                                <div className="text-xs text-slate-500">Main Arrival</div>
+                            </div>
+                            <div className="w-24">
+                                <label className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-0.5 block">Days</label>
+                                <input 
+                                    type="number" 
+                                    min={1} 
+                                    className="w-full border border-slate-200 rounded px-2 py-1 text-sm font-medium focus:ring-2 focus:ring-blue-500 outline-none"
+                                    value={firstDays}
+                                    onChange={(e) => setFirstDays(Math.max(1, parseInt(e.target.value) || 1))}
+                                />
+                            </div>
+                        </div>
+
+                        {extra.map((city, idx) => (
+                            <div key={idx} className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-500 grid place-items-center text-sm font-bold shrink-0">{idx + 2}</div>
+                                <div className="flex-1">
+                                    <div className="font-medium text-slate-900">{city || "Select City"}</div>
+                                    <div className="text-xs text-slate-500">Stop {idx + 1}</div>
+                                </div>
+                                <div className="w-24">
+                                    <label className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-0.5 block">Days</label>
+                                    <input 
+                                        type="number" 
+                                        min={1} 
+                                        className="w-full border border-slate-200 rounded px-2 py-1 text-sm font-medium focus:ring-2 focus:ring-blue-500 outline-none"
+                                        value={extraDays[idx] ?? 3}
+                                        onChange={(e) => {
+                                            const val = Math.max(1, parseInt(e.target.value) || 1);
+                                            setExtraDays(prev => {
+                                                const next = [...prev];
+                                                next[idx] = val;
+                                                return next;
+                                            });
+                                        }}
+                                    />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                  </div>
+                  <div className="p-4 border-t border-slate-100 bg-slate-50/50 flex justify-end">
+                    <button 
+                        onClick={() => setIsEditModalOpen(false)}
+                        className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-lg shadow-sm shadow-blue-200 transition-colors"
+                    >
+                        Done
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
             {planReturn ? (
               <div className="mt-3">
                 <div className="card p-3">
