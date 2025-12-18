@@ -505,6 +505,7 @@ export function SelectCitiesBubble({ originCountry, destCountry, onContinue }: {
         <div>
           <div className="font-semibold mb-1">Multi‑city Adventure 🌍</div>
           <div className="text-sm text-slate-700 mb-2">Your journey awaits — pick cities and stays ✨</div>
+          <div className="max-h-[50vh] min-h-[300px] overflow-y-auto pr-2 mb-3 scrollbar-thin scrollbar-thumb-blue-200 scrollbar-track-transparent border border-slate-100 rounded-xl bg-slate-50/30 p-2">
           <div className="grid md:grid-cols-2 gap-6 mb-4">
             <div>
               <div className="flex items-center gap-2 mb-2">
@@ -728,6 +729,7 @@ export function SelectCitiesBubble({ originCountry, destCountry, onContinue }: {
               {finalCity && finalCity === city ? (<div className="text-xs text-blue-700 mt-1">Final</div>) : null}
             </div>
           ))}
+          </div>
           <div className="mt-3 flex items-center gap-2">
             <button
               className="btn btn-secondary"
