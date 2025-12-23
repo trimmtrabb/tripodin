@@ -308,7 +308,7 @@ function Chatbot({ onSetDest, onSetOrigin, user, setRoute }: { onSetDest: (c: st
       ) : null}
 
       <FlightModal open={showFlight} onClose={() => setShowFlight(false)} originCountry={origin || ""} destCountry={dest || ""} totalStay={totalStay} fullItinerary={itinerary} />
-      <HotelModal open={showHotel} onClose={() => setShowHotel(false)} destCountry={dest || ""} />
+      <HotelModal open={showHotel} onClose={() => setShowHotel(false)} destCountry={dest || ""} totalStay={totalStay} />
       <InsuranceModal open={showInsurance} onClose={() => setShowInsurance(false)} originCountry={origin || ""} destCountry={dest || ""} totalStay={totalStay} />
       <MultiCityModal open={showMulti} onClose={() => setShowMulti(false)} originCountry={origin || ""} destCountry={dest || ""} onSubmit={() => setShowMulti(false)} transportModes={transportModes} fullItinerary={itinerary} tripType={tripType} totalStay={totalStay} />
     </div>

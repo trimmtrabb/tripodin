@@ -60,18 +60,15 @@ export function FlightModal({ open, onClose, originCountry, destCountry, totalSt
   if (!open) return null;
   return (
     <div className="fixed inset-0 bg-black/40 grid place-items-center z-[100]" onClick={onClose}>
-      <div className="card w-full max-w-2xl p-4 relative" onClick={(e) => e.stopPropagation()}>
-        <button 
-          className="absolute top-4 right-4 text-slate-400 hover:text-slate-600" 
-          onClick={onClose}
-          title="Close"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-        </button>
-        <div className="flex items-center gap-2 mb-2">
-          <div className="icon-square bg-blue-100 text-blue-600">✈️</div>
-          <div className="text-xl font-semibold">Book Flight</div>
+      <div className="w-full max-w-2xl bg-white rounded-2xl overflow-hidden shadow-xl" onClick={(e) => e.stopPropagation()}>
+        <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-4 flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <div className="w-9 h-9 rounded-lg bg-white/20 grid place-items-center text-xl">✈️</div>
+            <div className="text-lg font-semibold">Book Flight</div>
+          </div>
+          <button onClick={onClose} className="bg-white/20 hover:bg-white/30 text-white px-3 py-1 rounded">Close</button>
         </div>
+        <div className="p-4">
         <div className="text-sm text-slate-600 mb-3">
           {fullItinerary && fullItinerary.length > 0 ? (
             <div className="flex flex-wrap gap-1 items-center">
@@ -207,12 +204,13 @@ export function FlightModal({ open, onClose, originCountry, destCountry, totalSt
             )}
           </div>
         ) : null}
+        </div>
       </div>
     </div>
   );
 }
 
-export function HotelModal({ open, onClose, destCountry }: { open: boolean; onClose: () => void; destCountry: string }) {
+export function HotelModal({ open, onClose, destCountry, totalStay }: { open: boolean; onClose: () => void; destCountry: string; totalStay?: number }) {
   const cities = useMemo(() => getCities(destCountry), [destCountry]);
   const [city, setCity] = useState<string>(cities[0]?.name || "");
   const [inDate, setInDate] = useState<string>(() => new Date().toISOString().slice(0, 10));
@@ -220,6 +218,18 @@ export function HotelModal({ open, onClose, destCountry }: { open: boolean; onCl
   const [rooms, setRooms] = useState<number>(1);
   const [guests, setGuests] = useState<number>(2);
   const [showConf, setShowConf] = useState(false);
+  const daysBetween = (a: string, b: string) => {
+    try {
+      const d1 = new Date(a).getTime();
+      const d2 = new Date(b).getTime();
+      return Math.max(0, Math.round((d2 - d1) / 86400000));
+    } catch {
+      return 0;
+    }
+  };
+  const totalDays = useMemo(() => {
+    return typeof totalStay === "number" ? totalStay : daysBetween(inDate, outDate);
+  }, [totalStay, inDate, outDate]);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
     window.addEventListener("keydown", onKey);
@@ -228,18 +238,15 @@ export function HotelModal({ open, onClose, destCountry }: { open: boolean; onCl
   if (!open) return null;
   return (
     <div className="fixed inset-0 bg-black/40 grid place-items-center z-[100]" onClick={onClose}>
-      <div className="card w-full max-w-2xl p-4 relative" onClick={(e) => e.stopPropagation()}>
-        <button 
-          className="absolute top-4 right-4 text-slate-400 hover:text-slate-600" 
-          onClick={onClose}
-          title="Close"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-        </button>
-        <div className="flex items-center gap-2 mb-2">
-          <div className="icon-square bg-indigo-100 text-indigo-600">🏨</div>
-          <div className="text-xl font-semibold">Book Hotel</div>
+      <div className="w-full max-w-2xl bg-white rounded-2xl overflow-hidden shadow-xl" onClick={(e) => e.stopPropagation()}>
+        <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-4 flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <div className="w-9 h-9 rounded-lg bg-white/20 grid place-items-center text-xl">🏨</div>
+            <div className="text-lg font-semibold">Book Hotel</div>
+          </div>
+          <button onClick={onClose} className="bg-white/20 hover:bg-white/30 text-white px-3 py-1 rounded">Close</button>
         </div>
+        <div className="p-4">
         <div className="grid md:grid-cols-2 gap-3">
           <div>
             <div className="text-sm mb-1">City</div>
@@ -266,6 +273,43 @@ export function HotelModal({ open, onClose, destCountry }: { open: boolean; onCl
           <div className="text-sm mb-1">Guests</div>
           <input className="w-full border rounded p-2" type="number" min={1} value={guests} onChange={(e) => setGuests(Number(e.target.value))} />
         </div>
+        <div className="grid md:grid-cols-2 gap-3 mt-3">
+          <div className="card p-3">
+            <div className="font-medium mb-1">Travel Details</div>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <div className="text-xs mb-1">City</div>
+                <div className="text-sm">{city}</div>
+              </div>
+              <div>
+                <div className="text-xs mb-1">Rooms</div>
+                <div className="text-sm">{rooms}</div>
+              </div>
+              <div>
+                <div className="text-xs mb-1">Check‑in</div>
+                <div className="text-sm">{inDate}</div>
+              </div>
+              <div>
+                <div className="text-xs mb-1">Check‑out</div>
+                <div className="text-sm">{outDate}</div>
+              </div>
+              <div>
+                <div className="text-xs mb-1">Guests</div>
+                <div className="text-sm">{guests}</div>
+              </div>
+              <div>
+                <div className="text-xs mb-1">Status</div>
+                <div className="text-sm text-green-600 font-semibold">Confirmed</div>
+              </div>
+              {totalDays ? (
+                <div className="col-span-2">
+                  <div className="text-xs mb-1">Total Days</div>
+                  <div className="text-sm font-bold text-blue-700 bg-blue-50 border border-blue-100 rounded px-2 py-1 w-fit">{totalDays} days</div>
+                </div>
+              ) : null}
+            </div>
+          </div>
+        </div>
         <div className="mt-3 flex gap-2">
           <button className="btn btn-primary" onClick={() => setShowConf(true)}>Search Hotels</button>
         </div>
@@ -274,6 +318,7 @@ export function HotelModal({ open, onClose, destCountry }: { open: boolean; onCl
             <HotelConfirmation hotel="Sample Hotel" city={city} checkIn={inDate} checkOut={outDate} rooms={rooms} guests={guests} />
           </div>
         ) : null}
+        </div>
       </div>
     </div>
   );
