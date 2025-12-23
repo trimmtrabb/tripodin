@@ -13,6 +13,19 @@ export function FlightModal({ open, onClose, originCountry, destCountry, totalSt
   const [ret, setRet] = useState<string>(() => new Date(Date.now() + (totalStay ? totalStay * 86400000 : 86400000)).toISOString().slice(0, 10));
   const [pax, setPax] = useState<number>(2);
   const [showConf, setShowConf] = useState(false);
+  const daysBetween = (a: string, b: string) => {
+    try {
+      const d1 = new Date(a);
+      const d2 = new Date(b);
+      const ms = d2.getTime() - d1.getTime();
+      return Math.max(0, Math.round(ms / 86400000));
+    } catch {
+      return 0;
+    }
+  };
+  const totalDays = useMemo(() => {
+    return typeof totalStay === "number" ? totalStay : (tripType === "round" ? daysBetween(dep, ret) : 0);
+  }, [totalStay, tripType, dep, ret]);
   useEffect(() => {
     if (totalStay) {
       const d = new Date(dep);
@@ -72,7 +85,7 @@ export function FlightModal({ open, onClose, originCountry, destCountry, totalSt
           ) : (
             <>{from} ⇄ {to}</>
           )}
-          {totalStay ? <div className="text-xs text-slate-500 mt-1">Total Trip Duration: {totalStay} days</div> : null}
+          {totalDays ? <div className="text-xs text-slate-500 mt-1">Total Trip Duration: {totalDays} days</div> : null}
         </div>
         <div className="grid md:grid-cols-2 gap-3">
           <div>
@@ -143,6 +156,37 @@ export function FlightModal({ open, onClose, originCountry, destCountry, totalSt
         <div className="mt-3">
           <div className="text-sm mb-1">Passengers</div>
           <input className="w-full border rounded p-2" type="number" min={1} value={pax} onChange={(e) => setPax(Number(e.target.value))} />
+        </div>
+        <div className="grid md:grid-cols-2 gap-3 mt-3">
+          <div className="card p-3">
+            <div className="font-medium mb-1">Travel Details</div>
+            <div className="text-xs mb-1">Type</div>
+            <div className="pill pill-blue w-fit">{tripType === "oneway" ? "One‑way" : tripType === "round" ? "Round trip" : tripType === "openjaw" ? "Open‑jaw" : "Multi‑city"}</div>
+            <div className="grid grid-cols-2 gap-2 mt-3">
+              <div>
+                <div className="text-xs mb-1">Departure</div>
+                <div className="text-sm">{dep}</div>
+              </div>
+              {tripType === "round" ? (
+                <div>
+                  <div className="text-xs mb-1">Return</div>
+                  <div className="text-sm">{ret}</div>
+                </div>
+              ) : null}
+            </div>
+            <div className="grid grid-cols-2 gap-2 mt-3">
+              <div>
+                <div className="text-xs mb-1">Passengers</div>
+                <div className="text-sm">{pax}</div>
+              </div>
+              {totalDays ? (
+                <div>
+                  <div className="text-xs mb-1">Total Days</div>
+                  <div className="text-sm font-bold text-blue-700 bg-blue-50 border border-blue-100 rounded px-2 py-1 w-fit">{totalDays} days</div>
+                </div>
+              ) : null}
+            </div>
+          </div>
         </div>
         <div className="mt-3 flex gap-2">
           <button className="btn btn-primary" onClick={() => setShowConf(true)}>Search via Amadeus</button>
