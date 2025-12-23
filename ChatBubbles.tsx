@@ -283,11 +283,13 @@ export function SelectCitiesBubble({ originCountry, destCountry, onContinue }: {
   const routeSegments = React.useMemo(() => {
      if (points.length < 2) return [];
      
-     const segs: { d: string; mode: "flight" | "train" | "car"; mx: number; my: number; angle: number }[] = [];
+     const segs: { d: string; mode: "flight" | "train" | "car"; mx: number; my: number; angle: number; dir: "forward" | "return" }[] = [];
+    const forwardCount = Math.max(0, names.length - 1);
     for (let i = 0; i < points.length - 1; i++) {
       const p = points[i];
       const q = points[i + 1];
       const mode = getMode(i, p.name, q.name);
+      const dir: "forward" | "return" = i < forwardCount ? "forward" : "return";
 
       const mx = (p.x + q.x) / 2;
        const my = (p.y + q.y) / 2;
@@ -322,10 +324,10 @@ export function SelectCitiesBubble({ originCountry, destCountry, onContinue }: {
          angle = Math.atan2(ty, tx) * 180 / Math.PI;
        }
  
-       segs.push({ d, mode, mx: x, my: y, angle });
+       segs.push({ d, mode, mx: x, my: y, angle, dir });
      }
      return segs;
-   }, [points, transportModes]);
+   }, [points, transportModes, names]);
   // returnD and returnSegs removed as routeSegments now covers full path
 
   // removed strip and compass views per request
@@ -1091,7 +1093,13 @@ export function SelectCitiesBubble({ originCountry, destCountry, onContinue }: {
                       <path
                         d={seg.d}
                         fill="none"
-                        stroke={seg.mode === "flight" ? "#3b82f6" : (seg.mode === "train" ? "#eab308" : "#2563eb")}
+                        stroke={
+                          seg.mode === "flight"
+                            ? (seg.dir === "forward" ? "#3b82f6" : "#22d3ee")
+                            : (seg.mode === "train"
+                              ? (seg.dir === "forward" ? "#eab308" : "#f59e0b")
+                              : (seg.dir === "forward" ? "#2563eb" : "#22c55e"))
+                        }
                         strokeWidth={seg.mode === "flight" ? 4 : 6}
                         strokeLinecap="round"
                         strokeLinejoin="round"
@@ -1106,7 +1114,13 @@ export function SelectCitiesBubble({ originCountry, destCountry, onContinue }: {
                         y={seg.my - 10}
                         width="20"
                         height="20"
-                        fill={seg.mode === "flight" ? "#1d4ed8" : (seg.mode === "train" ? "#ca8a04" : "#1e40af")}
+                        fill={
+                          seg.mode === "flight"
+                            ? (seg.dir === "forward" ? "#1d4ed8" : "#0891b2")
+                            : (seg.mode === "train"
+                              ? (seg.dir === "forward" ? "#ca8a04" : "#c2410c")
+                              : (seg.dir === "forward" ? "#1e40af" : "#047857"))
+                        }
                         transform={seg.mode === "flight" ? `rotate(${seg.angle + 90}, ${seg.mx}, ${seg.my})` : ""}
                       />
                     </g>
