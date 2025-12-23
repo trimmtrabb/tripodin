@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { City, getCities, distanceKm } from "./cityData";
 
-export default function MultiCityModal({ open, onClose, originCountry, destCountry, onSubmit, tripType, dep, ret, pax, transportModes, fullItinerary, totalStay }: { open: boolean; onClose: () => void; originCountry: string; destCountry: string; onSubmit?: (cities: string[]) => void; tripType?: "oneway" | "round" | "multicity"; dep?: string; ret?: string; pax?: number; transportModes?: Record<number, "flight" | "train" | "car">; fullItinerary?: string[]; totalStay?: number }) {
+export default function MultiCityModal({ open, onClose, originCountry, destCountry, onSubmit, tripType, dep, ret, pax, transportModes, fullItinerary, totalStay, stays }: { open: boolean; onClose: () => void; originCountry: string; destCountry: string; onSubmit?: (cities: string[]) => void; tripType?: "oneway" | "round" | "multicity"; dep?: string; ret?: string; pax?: number; transportModes?: Record<number, "flight" | "train" | "car">; fullItinerary?: string[]; totalStay?: number; stays?: Record<string, number> }) {
   const originCities = useMemo(() => getCities(originCountry), [originCountry]);
   const destCities = useMemo(() => getCities(destCountry), [destCountry]);
   const [from, setFrom] = useState<string>(originCities[0]?.name || "");
@@ -86,6 +86,39 @@ export default function MultiCityModal({ open, onClose, originCountry, destCount
   
   const passengers = pax || 1;
 
+  const flightItineraryHeader = useMemo(() => {
+    if (!legs.length) return fullItinerary ? fullItinerary.join(" → ") : `${originCountry} → ${destCountry}`;
+
+    const chains: string[][] = [];
+    let currentChain: string[] = [];
+
+    legs.forEach((l, idx) => {
+      const mode = transportModes ? transportModes[idx] || "flight" : "flight";
+      if (mode === "flight") {
+        if (currentChain.length === 0) {
+          currentChain.push(l.from.name);
+          currentChain.push(l.to.name);
+        } else {
+           if (currentChain[currentChain.length - 1] === l.from.name) {
+             currentChain.push(l.to.name);
+           } else {
+             chains.push(currentChain);
+             currentChain = [l.from.name, l.to.name];
+           }
+        }
+      } else {
+        if (currentChain.length > 0) {
+          chains.push(currentChain);
+          currentChain = [];
+        }
+      }
+    });
+    if (currentChain.length > 0) chains.push(currentChain);
+
+    if (chains.length === 0) return "No flights selected";
+    return chains.map(c => c.join(" → ")).join(", ");
+  }, [legs, transportModes, fullItinerary, originCountry, destCountry]);
+
   if (!open) return null;
 
   return (
@@ -95,7 +128,7 @@ export default function MultiCityModal({ open, onClose, originCountry, destCount
           <div>
             <div className="text-xl font-bold">Round Trip Flight</div>
             <div className="text-xs text-purple-100 font-medium tracking-wide opacity-90">SECURE BOOKING</div>
-            <div className="text-xs font-mono mt-1 flex items-center gap-2 opacity-80">{fullItinerary ? fullItinerary.join(" → ") : `${originCountry} → ${destCountry}`}</div>
+            <div className="text-xs font-mono mt-1 flex items-center gap-2 opacity-80">{flightItineraryHeader}</div>
           </div>
           <button onClick={onClose} className="bg-white/20 hover:bg-white/30 text-white px-3 py-1 rounded">Close</button>
         </div>
@@ -110,58 +143,44 @@ export default function MultiCityModal({ open, onClose, originCountry, destCount
           </div>
           <div className="grid md:grid-cols-3 gap-3 items-stretch mt-3">
             <div className="md:col-span-2">
-              <div className="grid md:grid-cols-2 gap-3">
-                <div>
-                  <div className="text-sm mb-1">From ({from})</div>
-                  <div className="p-2 border rounded flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span>✈️</span>
-                      <div className="text-lg font-extrabold">{fromCity?.airport?.code || ""} → {firstCity?.airport?.code || ""}</div>
-                    </div>
-                    <div className="text-sm text-slate-500">{fromCity?.name || from}</div>
-                  </div>
-                  <div className="text-sm text-slate-500 mt-1">{fromCity?.name || from} → {firstCity?.name || city1}</div>
-                </div>
-                <div>
-                  <div className="text-sm mb-1">To ({city1})</div>
-                  <div className="p-2 border rounded flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span>✈️</span>
-                      <div className="text-lg font-extrabold">{tt === "round" ? `${firstCity?.airport?.code || ""} → ${fromCity?.airport?.code || ""}` : `${firstCity?.airport?.code || ""}`}</div>
-                    </div>
-                    <div className="text-sm text-slate-500">{firstCity?.name || city1}</div>
-                  </div>
-                  <div className="text-sm text-slate-500 mt-1">{tt === "round" ? `${firstCity?.name || city1} → ${fromCity?.name || from}` : `${firstCity?.name || city1}`}</div>
-                </div>
-              </div>
-              <div className="mt-3">
-                {extra.length ? (
-                  <div className="grid md:grid-cols-2 gap-3">
-                    {extra.map((e, i) => {
-                      const ci = findCity(destCities as any, e.name);
-                      return (
-                        <div key={i}>
-                          <div className="text-sm mb-1">Via</div>
-                          <div className="p-2 border rounded flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <span>✈️</span>
-                              <div className="text-lg font-extrabold">{ci?.airport?.code || ""}</div>
-                            </div>
-                            <div className="text-sm text-slate-500">{ci?.name || e.name}</div>
+              <div className="space-y-3 mb-4">
+                <div className="text-sm font-bold text-slate-700 uppercase tracking-wider">Flight Itinerary</div>
+                {legs.map((l, idx) => {
+                    const mode = transportModes ? transportModes[idx] || "flight" : "flight";
+                    if (mode !== "flight") return null;
+                    const fromCode = l.from.airport?.code || l.from.name.substring(0, 3).toUpperCase();
+                    const toCode = l.to.airport?.code || l.to.name.substring(0, 3).toUpperCase();
+                    return (
+                       <div key={idx} className="p-3 border border-blue-100 bg-blue-50/30 rounded-xl flex items-center justify-between">
+                          <div className="flex items-center gap-4">
+                             <div className="w-10 h-10 rounded-full bg-white shadow-sm border border-blue-100 grid place-items-center text-blue-600">✈️</div>
+                             <div>
+                                <div className="flex items-center gap-2">
+                                   <span className="text-xl font-bold text-slate-900">{fromCode}</span>
+                                   <span className="text-slate-300">→</span>
+                                   <span className="text-xl font-bold text-slate-900">{toCode}</span>
+                                </div>
+                                <div className="text-xs text-slate-500">{l.from.name} → {l.to.name}</div>
+                             </div>
                           </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                ) : null}
+                          <div className="text-right">
+                             <div className="px-2 py-1 rounded bg-green-100 text-green-700 text-[10px] font-bold border border-green-200 uppercase">Confirmed</div>
+                          </div>
+                       </div>
+                    );
+                 })}
+                 {legs.every((_, idx) => (transportModes ? transportModes[idx] : "flight") !== "flight") && (
+                    <div className="text-sm text-slate-500 italic p-4 border border-dashed border-slate-300 rounded-xl text-center">No flight segments in this itinerary.</div>
+                 )}
               </div>
               <div className="card p-3 mt-3">
                 <div className="font-medium mb-2">Route Summary</div>
                 <div className="space-y-1">
                   {legs.map((l, idx) => {
                     const mode = transportModes ? transportModes[idx] || "flight" : "flight";
-                    const icon = mode === "car" ? "🚗" : mode === "train" ? "🚆" : "✈️";
-                    const text = mode === "car" ? "by car" : mode === "train" ? "by train" : "by flight";
+                    if (mode !== "flight") return null;
+                    const icon = "✈️";
+                    const text = "by flight";
                     return (
                       <div key={idx} className="flex justify-between items-center">
                         <div className="flex items-center gap-2">
@@ -176,9 +195,15 @@ export default function MultiCityModal({ open, onClose, originCountry, destCount
                   })}
                 </div>
                 {legs.length ? (
-                  <div className="mt-2 border-t pt-2 font-semibold">Total Distance {legs.reduce((s, l) => s + l.km, 0)} km</div>
+                  <div className="mt-2 border-t pt-2 font-semibold">Total Distance {legs.reduce((s, l, idx) => {
+                    const mode = transportModes ? transportModes[idx] || "flight" : "flight";
+                    return mode === "flight" ? s + l.km : s;
+                  }, 0)} km</div>
                 ) : null}
               </div>
+
+              
+
             </div>
             <div className="card p-3">
               <div className="font-medium mb-1">Travel Details</div>
@@ -208,7 +233,8 @@ export default function MultiCityModal({ open, onClose, originCountry, destCount
                 <div className="text-xs text-green-700">Estimated Cost</div>
                 <div className="text-2xl font-extrabold text-green-700">$ {(legs.reduce((s, l, idx) => {
                   const mode = transportModes ? transportModes[idx] || "flight" : "flight";
-                  const rate = mode === "car" ? 0.15 : (mode === "train" ? 0.22 : 0.35);
+                  if (mode !== "flight") return s;
+                  const rate = 0.35;
                   return s + (l.km * rate);
                 }, 0)).toFixed(0)}</div>
                 <div className="text-xs text-green-700 mt-1">Includes travel & taxes</div>

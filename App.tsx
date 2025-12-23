@@ -144,6 +144,7 @@ function Chatbot({ onSetDest, onSetOrigin, user, setRoute }: { onSetDest: (c: st
   const [itinerary, setItinerary] = useState<string[]>([]);
   const [transportModes, setTransportModes] = useState<Record<number, "flight" | "train" | "car">>({});
   const [tripType, setTripType] = useState<"oneway" | "round" | "multicity">("round");
+  const [cityStays, setCityStays] = useState<Record<string, number>>({});
   const listRef = React.useRef<HTMLDivElement>(null);
   React.useEffect(() => {
     const el = listRef.current;
@@ -152,6 +153,17 @@ function Chatbot({ onSetDest, onSetOrigin, user, setRoute }: { onSetDest: (c: st
   }, [messages]);
   const originCities = React.useMemo(() => (origin ? getCities(origin) : []), [origin]);
   const destCities = React.useMemo(() => (dest ? getCities(dest) : []), [dest]);
+
+  const handleUpdate = React.useCallback((f: string, t: string, d: number, i: string[], tm: Record<number, "flight" | "train" | "car">, tt: "oneway" | "round" | "multicity", s: Record<string, number>) => {
+      setFromCity(f);
+      setToCity(t);
+      if (d) setTotalStay(d);
+      if (i) setItinerary(i);
+      if (tm) setTransportModes(tm);
+      if (tt) setTripType(tt);
+      if (s) setCityStays(s);
+  }, []);
+
   const send = (text: string) => {
     if (!text.trim()) return;
     const t = text.trim();
@@ -287,7 +299,12 @@ function Chatbot({ onSetDest, onSetOrigin, user, setRoute }: { onSetDest: (c: st
               {m.type === "text" ? (<div>{m.text}</div>) : null}
               {m.type === "noVisa" ? (<NoVisaBubble />) : null}
               {m.type === "selectCities" && dest && origin ? (
-                <SelectCitiesBubble originCountry={origin} destCountry={dest} onContinue={(f, t, d, i, tm, tt) => { setFromCity(f); setToCity(t); if(d) setTotalStay(d); if(i) setItinerary(i); if(tm) setTransportModes(tm); if(tt) setTripType(tt); setShowMulti(true); if (!upsellShown) { setUpsellShown(true); setMessages((mm) => [...mm, { type: "upsell" }]); } }} />
+                <SelectCitiesBubble 
+                  originCountry={origin} 
+                  destCountry={dest} 
+                  onContinue={(f, t, d, i, tm, tt, s) => { setFromCity(f); setToCity(t); if(d) setTotalStay(d); if(i) setItinerary(i); if(tm) setTransportModes(tm); if(tt) setTripType(tt); if(s) setCityStays(s); setShowMulti(true); if (!upsellShown) { setUpsellShown(true); setMessages((mm) => [...mm, { type: "upsell" }]); } }} 
+                  onUpdate={handleUpdate}
+                />
               ) : null}
               {m.type === "info" ? (<InfoBubble title="Info" text={m.text || ""} />) : null}
               {m.type === "upsell" ? (
@@ -306,9 +323,9 @@ function Chatbot({ onSetDest, onSetOrigin, user, setRoute }: { onSetDest: (c: st
       </div>
       ) : null}
 
-      <HotelModal open={showHotel} onClose={() => setShowHotel(false)} destCountry={dest || ""} totalStay={totalStay} />
+      <HotelModal open={showHotel} onClose={() => setShowHotel(false)} destCountry={dest || ""} totalStay={totalStay} stays={cityStays} />
       <InsuranceModal open={showInsurance} onClose={() => setShowInsurance(false)} originCountry={origin || ""} destCountry={dest || ""} totalStay={totalStay} />
-      <MultiCityModal open={showMulti} onClose={() => setShowMulti(false)} originCountry={origin || ""} destCountry={dest || ""} onSubmit={() => setShowMulti(false)} transportModes={transportModes} fullItinerary={itinerary} tripType={tripType} totalStay={totalStay} />
+      <MultiCityModal open={showMulti} onClose={() => setShowMulti(false)} originCountry={origin || ""} destCountry={dest || ""} onSubmit={() => setShowMulti(false)} transportModes={transportModes} fullItinerary={itinerary} tripType={tripType} totalStay={totalStay} stays={cityStays} />
     </div>
   );
 }

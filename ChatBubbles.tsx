@@ -18,7 +18,7 @@ export function NoVisaBubble() {
   );
 }
 
-export function SelectCitiesBubble({ originCountry, destCountry, onContinue }: { originCountry: string; destCountry: string; onContinue: (from: string, to: string, days: number, itinerary: string[], transportModes: Record<number, "flight" | "train" | "car">, tripType: "oneway" | "round" | "multicity") => void }) {
+export function SelectCitiesBubble({ originCountry, destCountry, onContinue, onUpdate }: { originCountry: string; destCountry: string; onContinue: (from: string, to: string, days: number, itinerary: string[], transportModes: Record<number, "flight" | "train" | "car">, tripType: "oneway" | "round" | "multicity", stays: Record<string, number>) => void; onUpdate?: (from: string, to: string, days: number, itinerary: string[], transportModes: Record<number, "flight" | "train" | "car">, tripType: "oneway" | "round" | "multicity", stays: Record<string, number>) => void }) {
   const originCities = useMemo(() => getCities(originCountry), [originCountry]);
   const destCities = useMemo(() => getCities(destCountry), [destCountry]);
   const [tab, setTab] = useState<"direct" | "multi">("direct");
@@ -53,6 +53,7 @@ export function SelectCitiesBubble({ originCountry, destCountry, onContinue }: {
   const [editingReturns, setEditingReturns] = useState<{[key: number]: boolean}>({});
   const [transportModes, setTransportModes] = useState<{[key: number]: "flight" | "train" | "car"}>({});
   const [mapError, setMapError] = useState<boolean>(false);
+
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const label = from && to ? `Continue with ${from} → ${to}` : "Continue";
   const mLabel = start && first ? `Plan Multi‑city with ${start} → ${first}` : "Continue";
@@ -62,11 +63,12 @@ export function SelectCitiesBubble({ originCountry, destCountry, onContinue }: {
   useEffect(() => {
     addCityBtnRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }, [extra.length]);
-  const find = (name: string) => {
+  const find = React.useCallback((name: string) => {
     const all = [...originCities, ...destCities];
     return all.find((c) => c.name === name);
-  };
-  const getMode = (idx: number, from: string, to: string) => {
+  }, [originCities, destCities]);
+
+  const getMode = React.useCallback((idx: number, from: string, to: string) => {
     if (transportModes[idx]) return transportModes[idx];
     const A = find(from);
     const B = find(to);
@@ -84,7 +86,34 @@ export function SelectCitiesBubble({ originCountry, destCountry, onContinue }: {
     }
 
     return "flight";
-  };
+  }, [transportModes, originCities, destCities, originCountry, destCountry, find]);
+
+  // Real-time update hook
+  React.useEffect(() => {
+     if (!onUpdate) return;
+     const points = names.map(n => find(n)).filter(Boolean) as any[]; 
+     if (points.length < 2) return;
+
+     const totalDays = firstDays + extraDays.reduce((s, d) => s + (d || 0), 0);
+     const itinerary = points.map((p) => p.name);
+     const finalModes: { [key: number]: "flight" | "train" | "car" } = {};
+     for (let i = 0; i < points.length - 1; i++) {
+        if (transportModes[i]) {
+            finalModes[i] = transportModes[i];
+        } else {
+            const p = points[i]; const q = points[i+1];
+            finalModes[i] = getMode(i, p.name, q.name);
+        }
+     }
+     const stays: Record<string, number> = {};
+     if (first) stays[first] = firstDays;
+     extra.forEach((e, i) => {
+        if (e) stays[e] = extraDays[i] || 0;
+     });
+     
+     onUpdate(start, first, totalDays, itinerary, finalModes, extra.length > 0 ? "multicity" : (planReturn ? "round" : "oneway"), stays);
+
+  }, [firstDays, extraDays, first, extra, start, planReturn, transportModes, onUpdate, getMode, names, find]);
   React.useEffect(() => {
     setTransportModes((prev) => {
       const next = { ...prev };
@@ -284,6 +313,17 @@ export function SelectCitiesBubble({ originCountry, destCountry, onContinue }: {
       return { x, y, name: c.name };
     });
   }, [names, originCities, destCities, countryBounds, planReturn, finalCity, returnStops, start]);
+
+  const hasFlights = React.useMemo(() => {
+    if (points.length < 2) return false;
+    for (let i = 0; i < points.length - 1; i++) {
+        const p = points[i];
+        const q = points[i+1];
+        if (getMode(i, p.name, q.name) === "flight") return true;
+    }
+    return false;
+  }, [points, getMode]);
+
   const routeSegments = React.useMemo(() => {
      if (points.length < 2) return [];
      
@@ -501,7 +541,7 @@ export function SelectCitiesBubble({ originCountry, destCountry, onContinue }: {
 
           <button 
             className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-200 transition-all transform active:scale-[0.99] flex items-center justify-center gap-2 text-lg" 
-            onClick={() => onContinue(from, to, 3, [from, to], {}, "oneway")}
+            onClick={() => onContinue(from, to, 3, [from, to], {}, "oneway", { [to]: 3 })}
           >
             <span>Continue with {from} → {to}</span>
             <span>→</span>
@@ -1399,10 +1439,10 @@ export function SelectCitiesBubble({ originCountry, destCountry, onContinue }: {
                                 <label className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-0.5 block">Days</label>
                                 <input 
                                     type="number" 
-                                    min={1} 
+                                    min={0} 
                                     className="w-full border border-slate-200 rounded px-2 py-1 text-sm font-medium focus:ring-2 focus:ring-blue-500 outline-none"
                                     value={firstDays}
-                                    onChange={(e) => setFirstDays(Math.max(1, parseInt(e.target.value) || 1))}
+                                    onChange={(e) => setFirstDays(Math.max(0, parseInt(e.target.value) || 0))}
                                 />
                             </div>
                         </div>
@@ -1418,11 +1458,11 @@ export function SelectCitiesBubble({ originCountry, destCountry, onContinue }: {
                                     <label className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-0.5 block">Days</label>
                                     <input 
                                         type="number" 
-                                        min={1} 
+                                        min={0} 
                                         className="w-full border border-slate-200 rounded px-2 py-1 text-sm font-medium focus:ring-2 focus:ring-blue-500 outline-none"
                                         value={extraDays[idx] ?? 3}
                                         onChange={(e) => {
-                                            const val = Math.max(1, parseInt(e.target.value) || 1);
+                                            const val = Math.max(0, parseInt(e.target.value) || 0);
                                             setExtraDays(prev => {
                                                 const next = [...prev];
                                                 next[idx] = val;
@@ -1461,7 +1501,7 @@ export function SelectCitiesBubble({ originCountry, destCountry, onContinue }: {
           </div>
         </div>
         <div className="shrink-0 p-3 border-t bg-white z-10">
-          <button className="btn btn-primary btn-lg w-full" onClick={() => {
+          <button className="btn btn-primary btn-lg w-full" disabled={!hasFlights} title={!hasFlights ? "No flights in itinerary" : ""} onClick={() => {
             const totalDays = firstDays + extraDays.reduce((s, d) => s + (d || 0), 0);
             const itinerary = points.map((p) => p.name);
             const finalModes: { [key: number]: "flight" | "train" | "car" } = {};
@@ -1473,7 +1513,12 @@ export function SelectCitiesBubble({ originCountry, destCountry, onContinue }: {
                  finalModes[i] = getMode(i, p.name, q.name);
               }
             }
-            onContinue(start, first, totalDays, itinerary, finalModes, planReturn ? "round" : "oneway");
+            const stays: Record<string, number> = {};
+            if (first) stays[first] = firstDays;
+            extra.forEach((e, i) => {
+               if (e) stays[e] = extraDays[i] || 0;
+            });
+            onContinue(start, first, totalDays, itinerary, finalModes, extra.length > 0 ? "multicity" : (planReturn ? "round" : "oneway"), stays);
           }}>
             {planReturn ? (
               <>Plan Round Trip with {start} ⇄ {first}</>

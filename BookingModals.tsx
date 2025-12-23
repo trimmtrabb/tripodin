@@ -294,7 +294,7 @@ export function FlightModal({ open, onClose, originCountry, destCountry, totalSt
   );
 }
 
-export function HotelModal({ open, onClose, destCountry, totalStay }: { open: boolean; onClose: () => void; destCountry: string; totalStay?: number }) {
+export function HotelModal({ open, onClose, destCountry, totalStay, stays }: { open: boolean; onClose: () => void; destCountry: string; totalStay?: number; stays?: Record<string, number> }) {
   const cities = useMemo(() => getCities(destCountry), [destCountry]);
   const [city, setCity] = useState<string>(cities[0]?.name || "");
   const [inDate, setInDate] = useState<string>(() => new Date().toISOString().slice(0, 10));
@@ -302,6 +302,16 @@ export function HotelModal({ open, onClose, destCountry, totalStay }: { open: bo
   const [rooms, setRooms] = useState<number>(1);
   const [guests, setGuests] = useState<number>(2);
   const [showConf, setShowConf] = useState(false);
+
+  const validStays = useMemo(() => {
+      if (stays && Object.keys(stays).length > 0) {
+          return Object.entries(stays)
+              .filter(([_, d]) => d > 0)
+              .map(([c, d]) => ({ city: c, days: d }));
+      }
+      return [];
+  }, [stays]);
+
   const daysBetween = (a: string, b: string) => {
     try {
       const d1 = new Date(a).getTime();
@@ -311,9 +321,20 @@ export function HotelModal({ open, onClose, destCountry, totalStay }: { open: bo
       return 0;
     }
   };
+
+  const addDays = (dateStr: string, days: number) => {
+      const d = new Date(dateStr);
+      d.setDate(d.getDate() + days);
+      return d.toISOString().slice(0, 10);
+  };
+
   const totalDays = useMemo(() => {
+    if (validStays.length > 0) {
+        return validStays.reduce((sum, s) => sum + s.days, 0);
+    }
     return typeof totalStay === "number" ? totalStay : daysBetween(inDate, outDate);
-  }, [totalStay, inDate, outDate]);
+  }, [totalStay, inDate, outDate, validStays]);
+
   useEffect(() => {
     if (totalStay) {
       const d = new Date(inDate);
@@ -321,11 +342,30 @@ export function HotelModal({ open, onClose, destCountry, totalStay }: { open: bo
       setOutDate(d.toISOString().slice(0, 10));
     }
   }, [totalStay, inDate]);
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
+
+  const schedule = useMemo(() => {
+     let curr = new Date(inDate);
+     const items = validStays.length > 0 ? validStays : [{ city: city, days: totalDays }];
+     return items.map(item => {
+         const start = curr.toISOString().slice(0, 10);
+         const d = new Date(curr);
+         d.setDate(d.getDate() + (item.days || 1));
+         const end = d.toISOString().slice(0, 10);
+         curr = d; 
+         
+         if (validStays.length === 0) {
+             return { ...item, start: inDate, end: outDate };
+         }
+         return { ...item, start, end };
+     });
+  }, [validStays, inDate, outDate, city, totalDays]);
+
   if (!open) return null;
   return (
     <div className="fixed inset-0 bg-black/40 grid place-items-center z-[100] p-4" onClick={onClose}>
@@ -346,6 +386,7 @@ export function HotelModal({ open, onClose, destCountry, totalStay }: { open: bo
           <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm mb-6">
             <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Stay Preferences</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              {validStays.length === 0 && (
               <div className="md:col-span-2">
                 <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">Destination City</label>
                 <div className="relative group">
@@ -364,15 +405,16 @@ export function HotelModal({ open, onClose, destCountry, totalStay }: { open: bo
                   </div>
                 </div>
               </div>
+              )}
               
               <div className="bg-slate-50 p-3 rounded-lg border border-slate-100 md:col-span-2 grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-1.5">Check-in</label>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1.5">Check-in (Trip Start)</label>
                   <input className="w-full border border-slate-200 rounded-lg p-2 text-sm focus:ring-blue-500 focus:border-blue-500" type="date" value={inDate} onChange={(e) => setInDate(e.target.value)} />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-1.5">Check-out</label>
-                  <input className="w-full border border-slate-200 rounded-lg p-2 text-sm focus:ring-blue-500 focus:border-blue-500" type="date" value={outDate} onChange={(e) => setOutDate(e.target.value)} />
+                  <label className="block text-xs font-semibold text-slate-600 mb-1.5">Check-out (Trip End)</label>
+                  <input className="w-full border border-slate-200 rounded-lg p-2 text-sm focus:ring-blue-500 focus:border-blue-500" type="date" value={validStays.length > 0 ? addDays(inDate, totalDays || 0) : outDate} disabled={validStays.length > 0} onChange={(e) => setOutDate(e.target.value)} />
                 </div>
               </div>
 
@@ -407,78 +449,84 @@ export function HotelModal({ open, onClose, destCountry, totalStay }: { open: bo
           </div>
 
           {/* Ticket Preview */}
-          <div className="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden relative mb-6 transform transition-all hover:scale-[1.01] duration-300">
-            {/* Decorative top bar */}
-            <div className="h-1.5 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500"></div>
-            
-            <div className="p-6">
-              <div className="flex justify-between items-start mb-6">
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="bg-blue-100 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider">Confirmed</span>
-                    <span className="text-slate-400 text-xs">• TripOdin</span>
+          {schedule.map((item, idx) => (
+              <div key={idx} className="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden relative mb-6 transform transition-all hover:scale-[1.01] duration-300">
+                {/* Decorative top bar */}
+                <div className="h-1.5 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500"></div>
+                
+                <div className="p-6">
+                  <div className="flex justify-between items-start mb-6">
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="bg-blue-100 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider">Confirmed</span>
+                        <span className="text-slate-400 text-xs">• TripOdin</span>
+                      </div>
+                      <h2 className="text-2xl font-bold text-slate-800 tracking-tight">Hotel Reservation</h2>
+                    </div>
+                    <div className="text-right bg-blue-50 px-3 py-2 rounded-lg border border-blue-100">
+                      <div className="text-[10px] text-blue-400 uppercase tracking-widest font-bold">Duration</div>
+                      <div className="text-lg font-black text-blue-600 leading-none">{item.days || daysBetween(item.start, item.end)} <span className="text-sm font-medium text-blue-400">Nights</span></div>
+                    </div>
                   </div>
-                  <h2 className="text-2xl font-bold text-slate-800 tracking-tight">Hotel Reservation</h2>
-                </div>
-                <div className="text-right bg-blue-50 px-3 py-2 rounded-lg border border-blue-100">
-                  <div className="text-[10px] text-blue-400 uppercase tracking-widest font-bold">Duration</div>
-                  <div className="text-lg font-black text-blue-600 leading-none">{totalDays} <span className="text-sm font-medium text-blue-400">Nights</span></div>
-                </div>
-              </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-y-6 gap-x-4">
-                <div>
-                  <div className="text-[10px] text-slate-400 uppercase tracking-widest font-bold mb-1">Location</div>
-                  <div className="font-bold text-slate-700 text-lg leading-tight">{city}</div>
-                  <div className="text-xs text-slate-500">{destCountry}</div>
-                </div>
-                <div>
-                  <div className="text-[10px] text-slate-400 uppercase tracking-widest font-bold mb-1">Details</div>
-                  <div className="font-medium text-slate-700">{guests} Guest{guests > 1 ? 's' : ''}</div>
-                  <div className="text-xs text-slate-500">{rooms} Room{rooms > 1 ? 's' : ''}</div>
-                </div>
-                <div>
-                  <div className="text-[10px] text-slate-400 uppercase tracking-widest font-bold mb-1">Check-in</div>
-                  <div className="font-bold text-slate-700">{inDate}</div>
-                  <div className="text-xs text-slate-500">After 14:00</div>
-                </div>
-                <div>
-                  <div className="text-[10px] text-slate-400 uppercase tracking-widest font-bold mb-1">Check-out</div>
-                  <div className="font-bold text-slate-700">{outDate}</div>
-                  <div className="text-xs text-slate-500">Before 11:00</div>
-                </div>
-              </div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-y-6 gap-x-4">
+                    <div>
+                      <div className="text-[10px] text-slate-400 uppercase tracking-widest font-bold mb-1">Location</div>
+                      <div className="font-bold text-slate-700 text-lg leading-tight">{item.city}</div>
+                      <div className="text-xs text-slate-500">{destCountry}</div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] text-slate-400 uppercase tracking-widest font-bold mb-1">Details</div>
+                      <div className="font-medium text-slate-700">{guests} Guest{guests > 1 ? 's' : ''}</div>
+                      <div className="text-xs text-slate-500">{rooms} Room{rooms > 1 ? 's' : ''}</div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] text-slate-400 uppercase tracking-widest font-bold mb-1">Check-in</div>
+                      <div className="font-bold text-slate-700">{item.start}</div>
+                      <div className="text-xs text-slate-500">After 14:00</div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] text-slate-400 uppercase tracking-widest font-bold mb-1">Check-out</div>
+                      <div className="font-bold text-slate-700">{item.end}</div>
+                      <div className="text-xs text-slate-500">Before 11:00</div>
+                    </div>
+                  </div>
 
-              {/* Dashed line with notches */}
-              <div className="my-6 relative flex items-center">
-                <div className="absolute -left-8 w-6 h-6 bg-slate-50 rounded-full z-10"></div>
-                <div className="w-full border-t-2 border-dashed border-slate-200"></div>
-                <div className="absolute -right-8 w-6 h-6 bg-slate-50 rounded-full z-10"></div>
-              </div>
+                  {/* Dashed line with notches */}
+                  <div className="my-6 relative flex items-center">
+                    <div className="absolute -left-8 w-6 h-6 bg-slate-50 rounded-full z-10"></div>
+                    <div className="w-full border-t-2 border-dashed border-slate-200"></div>
+                    <div className="absolute -right-8 w-6 h-6 bg-slate-50 rounded-full z-10"></div>
+                  </div>
 
-              <div className="flex justify-between items-center">
-                <div className="flex flex-col">
-                  <span className="text-[10px] text-slate-400 uppercase tracking-widest mb-1">Booking Reference</span>
-                  <span className="font-mono text-slate-600 tracking-widest text-sm">HOTEL-{city.substring(0,3).toUpperCase()}-{Math.floor(Math.random() * 10000)}</span>
+                  <div className="flex justify-between items-center">
+                    <div className="flex flex-col">
+                      <span className="text-[10px] text-slate-400 uppercase tracking-widest mb-1">Booking Reference</span>
+                      <span className="font-mono text-slate-600 tracking-widest text-sm">HOTEL-{item.city.substring(0,3).toUpperCase()}-{Math.floor(Math.random() * 10000)}</span>
+                    </div>
+                    <svg className="h-10 w-40 text-slate-800 opacity-80" viewBox="0 0 100 30" preserveAspectRatio="none">
+                      <path d="M0,0 h2 v30 h-2 z M4,0 h1 v30 h-1 z M7,0 h3 v30 h-3 z M12,0 h1 v30 h-1 z M15,0 h2 v30 h-2 z M20,0 h3 v30 h-3 z M25,0 h1 v30 h-1 z M30,0 h2 v30 h-2 z M35,0 h1 v30 h-1 z M40,0 h3 v30 h-3 z M45,0 h1 v30 h-1 z M50,0 h2 v30 h-2 z M55,0 h1 v30 h-1 z M60,0 h3 v30 h-3 z M65,0 h2 v30 h-2 z M70,0 h1 v30 h-1 z M75,0 h2 v30 h-2 z M80,0 h3 v30 h-3 z M85,0 h1 v30 h-1 z M90,0 h2 v30 h-2 z M95,0 h1 v30 h-1 z" fill="currentColor" />
+                    </svg>
+                  </div>
                 </div>
-                <svg className="h-10 w-40 text-slate-800 opacity-80" viewBox="0 0 100 30" preserveAspectRatio="none">
-                  <path d="M0,0 h2 v30 h-2 z M4,0 h1 v30 h-1 z M7,0 h3 v30 h-3 z M12,0 h1 v30 h-1 z M15,0 h2 v30 h-2 z M20,0 h3 v30 h-3 z M25,0 h1 v30 h-1 z M30,0 h2 v30 h-2 z M35,0 h1 v30 h-1 z M40,0 h3 v30 h-3 z M45,0 h1 v30 h-1 z M50,0 h2 v30 h-2 z M55,0 h1 v30 h-1 z M60,0 h3 v30 h-3 z M65,0 h2 v30 h-2 z M70,0 h1 v30 h-1 z M75,0 h2 v30 h-2 z M80,0 h3 v30 h-3 z M85,0 h1 v30 h-1 z M90,0 h2 v30 h-2 z M95,0 h1 v30 h-1 z" fill="currentColor" />
-                </svg>
               </div>
-            </div>
-          </div>
+          ))}
 
           <button 
             className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-500/30 transition-all transform active:scale-[0.98] text-lg flex justify-center items-center gap-2"
             onClick={() => setShowConf(true)}
           >
-            <span>Find Best Hotels in {city}</span>
+            <span>{validStays.length > 1 ? "Confirm All Bookings" : `Find Best Hotels in ${city}`}</span>
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
           </button>
 
           {showConf ? (
             <div className="mt-6 animate-in">
-              <HotelConfirmation hotel="Sample Hotel" city={city} checkIn={inDate} checkOut={outDate} rooms={rooms} guests={guests} />
+              {schedule.map((item, idx) => (
+                  <div key={idx} className="mb-4">
+                      <HotelConfirmation hotel={`Grand Hotel ${item.city}`} city={item.city} checkIn={item.start} checkOut={item.end} rooms={rooms} guests={guests} />
+                  </div>
+              ))}
             </div>
           ) : null}
         </div>
