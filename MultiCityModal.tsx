@@ -89,16 +89,17 @@ export default function MultiCityModal({ open, onClose, originCountry, destCount
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/40 grid place-items-center z-[100]" onClick={onClose}>
-      <div className="bp-card w-full max-w-3xl" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 bg-black/40 grid place-items-center z-[100] p-4" onClick={onClose}>
+      <div className="bp-card w-full max-w-3xl max-h-[90vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
         <div className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-4 flex justify-between items-center shrink-0">
           <div>
-            <div className="text-xs font-bold tracking-widest uppercase opacity-80">Round Trip Flight  {ref}</div>
-            <div className="text-lg font-mono mt-1 flex items-center gap-2">{fullItinerary ? fullItinerary.join(" → ") : `${originCountry} → ${destCountry}`}</div>
+            <div className="text-xl font-bold">Round Trip Flight</div>
+            <div className="text-xs text-purple-100 font-medium tracking-wide opacity-90">SECURE BOOKING</div>
+            <div className="text-xs font-mono mt-1 flex items-center gap-2 opacity-80">{fullItinerary ? fullItinerary.join(" → ") : `${originCountry} → ${destCountry}`}</div>
           </div>
           <button onClick={onClose} className="bg-white/20 hover:bg-white/30 text-white px-3 py-1 rounded">Close</button>
         </div>
-        <div className="p-4">
+        <div className="p-4 overflow-y-auto custom-scrollbar">
           <div className="text-2xl font-bold">Confirmation</div>
           <div className="card p-3 mt-3">
             <div className="flex items-center justify-between">

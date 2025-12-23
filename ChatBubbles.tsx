@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useRef, useEffect } from "react";
 import { getCities, distanceKm } from "./cityData";
 import { isSameZone } from "./visaEngine";
 
@@ -58,6 +58,10 @@ export function SelectCitiesBubble({ originCountry, destCountry, onContinue }: {
   const mLabel = start && first ? `Plan Multi‑city with ${start} → ${first}` : "Continue";
   const names = React.useMemo(() => [start, first, ...extra].filter(Boolean), [start, first, extra]);
   const pairsRef = React.useRef<[string, string][]>([]);
+  const addCityBtnRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    addCityBtnRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }, [extra.length]);
   const find = (name: string) => {
     const all = [...originCities, ...destCities];
     return all.find((c) => c.name === name);
@@ -399,7 +403,7 @@ export function SelectCitiesBubble({ originCountry, destCountry, onContinue }: {
     }
 
     return (
-      <div className="flex flex-col items-end">
+      <div className="flex flex-col items-center">
         <div className="flex bg-slate-100 rounded p-1 gap-1 shrink-0 relative">
           <button
             className={`p-1 rounded text-xs ${mode === "flight" ? "bg-white shadow text-blue-600" : "text-slate-400 hover:text-slate-600"}`}
@@ -421,7 +425,7 @@ export function SelectCitiesBubble({ originCountry, destCountry, onContinue }: {
           </button>
         </div>
         {isCarRec && (
-            <div className="text-[10px] text-green-700 font-medium mt-1 bg-green-50 px-1.5 py-0.5 rounded border border-green-100 text-right leading-tight max-w-[120px]">
+            <div className="text-[10px] text-green-700 font-medium mt-1 bg-green-50 px-1.5 py-0.5 rounded border border-green-100 text-center leading-tight max-w-[120px]">
                 {recText}
             </div>
         )}
@@ -504,7 +508,8 @@ export function SelectCitiesBubble({ originCountry, destCountry, onContinue }: {
           </button>
         </div>
       ) : (
-        <div>
+        <div className="flex flex-col max-h-[70vh]">
+          <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
           <div className="font-semibold mb-1">Multi‑city Adventure 🌍</div>
           <div className="text-sm text-slate-700 mb-2">Your journey awaits — pick cities and stays ✨</div>
           <div className="grid md:grid-cols-2 gap-6 mb-4">
@@ -567,10 +572,41 @@ export function SelectCitiesBubble({ originCountry, destCountry, onContinue }: {
                {finalCity === first ? (<div className="text-xs text-blue-700 mt-1 font-medium text-right">✓ Marked as Final City</div>) : null}
             </div>
           </div>
+          <div className="mt-2 mb-4 flex flex-wrap gap-2 items-center bg-blue-50/50 p-3 rounded-xl border border-blue-100">
+            <button
+              ref={addCityBtnRef}
+              className="btn btn-secondary shadow-sm hover:shadow-md transition-all bg-white text-blue-700 border-blue-200"
+              disabled={[start, ...extra, first].filter(Boolean).length >= maxCities}
+              title={[start, ...extra, first].filter(Boolean).length >= maxCities ? "Max 5 cities reached — remove a city to add another" : "Add another city"}
+              aria-disabled={[start, ...extra, first].filter(Boolean).length >= maxCities}
+              onClick={() => {
+                setExtra((arr) => arr.length < maxCities - 2 ? [...arr, ""] : arr);
+                setExtraDays((arr) => arr.length < maxCities - 2 ? [...arr, 3] : arr);
+                setExtraFilter((arr) => arr.length < maxCities - 2 ? [...arr, ""] : arr);
+              }}
+            >+ Add more cities ✨</button>
+            <button
+                className={`pill ${planReturn ? "pill-blue shadow-sm" : "bg-white hover:bg-slate-50 border border-slate-200"}`}
+                onClick={() => {
+                  if (planReturn) {
+                    setPlanReturn(false);
+                    setFinalCity("");
+                    setReturnStops([]);
+                    setReturnFilters([]);
+                  } else {
+                    setPlanReturn(true);
+                  }
+                }}
+                title={planReturn ? "Disable return planning" : "Enable return planning"}
+              >
+                {planReturn ? "Return planned" : "Plan return ↩"}
+            </button>
+            <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider ml-auto bg-white px-2 py-1 rounded border border-slate-100">{[start, ...extra, first].filter(Boolean).length} / {maxCities} cities</div>
+          </div>
           {extra.map((city, idx) => (
             <div
               key={idx}
-              className="mt-3"
+              className="group relative flex items-center gap-3 p-3 bg-white border border-slate-200 rounded-xl shadow-sm mb-3 transition-all hover:shadow-md hover:border-blue-300"
               draggable
               onDragStart={() => setDragIndex(idx)}
               onDragOver={(ev) => ev.preventDefault()}
@@ -591,288 +627,284 @@ export function SelectCitiesBubble({ originCountry, destCountry, onContinue }: {
                 setDragIndex(null);
               }}
             >
-              <div className="text-xs mb-1">City {idx + 2}</div>
-              <div className="flex items-center gap-2">
-                <button className="btn btn-secondary" title="Drag to reorder" aria-label="Drag to reorder">⇅</button>
-                {city && !editingExtras[idx] ? (
-                  <div
-                    className="flex-1 border rounded p-2 bg-blue-50 text-blue-900 cursor-pointer flex items-center justify-between group"
-                    onClick={() => setEditingExtras((prev) => ({ ...prev, [idx]: true }))}
-                    title="Click to edit city"
-                  >
-                    <span className="font-medium">{city}</span>
-                    <span className="text-xs text-blue-400 group-hover:text-blue-600">✎ Edit</span>
-                  </div>
-                ) : (
-                  <input
-                    autoFocus={!!editingExtras[idx]}
-                    className="flex-1 border rounded p-2"
-                    placeholder="Search & select city ✈️"
-                    list={`city-suggest-${idx}`}
-                    value={extraFilter[idx] ?? (city || "")}
-                    onChange={(e) => {
-                      const v = e.target.value;
-                      setExtraFilter((arr) => {
-                        const next = arr.slice();
-                        next[idx] = v;
-                        return next;
-                      });
-                      const exact = destCities.find((c) => c.name.toLowerCase() === v.toLowerCase());
-                      if (exact) {
-                        setExtra((arr) => arr.map((x, i) => i === idx ? exact.name : x));
-                        setEditingExtras((prev) => ({ ...prev, [idx]: false }));
-                        return;
-                      }
-                      const matches = destCities.filter((c) => c.name.toLowerCase().startsWith(v.toLowerCase()));
-                      if (v.length >= 2 && matches.length === 1) {
-                        setExtra((arr) => arr.map((x, i) => i === idx ? matches[0].name : x));
-                        setExtraFilter((arr) => {
-                          const next = arr.slice();
-                          next[idx] = matches[0].name;
-                          return next;
-                        });
-                        setEditingExtras((prev) => ({ ...prev, [idx]: false }));
-                        return;
-                      }
-                      if (!v) {
-                        setExtra((arr) => arr.map((x, i) => i === idx ? "" : x));
-                        return;
-                      }
-                    }}
-                    onBlur={() => {
-                      const v = extraFilter[idx] ?? "";
-                      const match = destCities.find((c) => c.name.toLowerCase() === v.toLowerCase());
-                      if (match) {
-                        setExtra((arr) => arr.map((x, i) => i === idx ? match.name : x));
-                        setEditingExtras((prev) => ({ ...prev, [idx]: false }));
-                      } else if (city) {
-                        // Revert to previously selected city if current input is invalid
-                        setEditingExtras((prev) => ({ ...prev, [idx]: false }));
-                        // Also restore the filter text to match the city
-                        setExtraFilter((arr) => {
-                          const next = arr.slice();
-                          next[idx] = city;
-                          return next;
-                        });
-                      }
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        const v = extraFilter[idx] ?? "";
-                        const match = destCities.find((c) => c.name.toLowerCase().startsWith(v.toLowerCase()));
-                        if (match) {
-                          setExtra((arr) => arr.map((x, i) => i === idx ? match.name : x));
+              <button className="text-slate-400 hover:text-blue-500 cursor-grab active:cursor-grabbing p-1" title="Drag to reorder" aria-label="Drag to reorder">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M4 3.5a1 1 0 1 1 2 0 1 1 0 0 1-2 0zm0 4.5a1 1 0 1 1 2 0 1 1 0 0 1-2 0zm0 4.5a1 1 0 1 1 2 0 1 1 0 0 1-2 0zm8-9a1 1 0 1 1 2 0 1 1 0 0 1-2 0zm0 4.5a1 1 0 1 1 2 0 1 1 0 0 1-2 0zm0 4.5a1 1 0 1 1 2 0 1 1 0 0 1-2 0z"/></svg>
+              </button>
+
+              <div className="flex-1 min-w-0">
+                 <div className="flex flex-col">
+                    <span className="text-[10px] font-bold uppercase text-slate-400 tracking-wider mb-0.5">City {idx + 3}</span>
+                    {city && !editingExtras[idx] ? (
+                      <div className="flex items-center gap-2 group/edit cursor-pointer" onClick={() => setEditingExtras((prev) => ({ ...prev, [idx]: true }))} title="Click to edit city">
+                         <span className="font-bold text-slate-700 text-lg truncate">{city}</span>
+                         <span className="text-slate-300 group-hover/edit:text-blue-500 transition-colors text-xs">✎</span>
+                      </div>
+                    ) : (
+                      <input
+                        autoFocus={!!editingExtras[idx]}
+                        className="w-full bg-slate-50 border-none rounded p-1 text-lg font-bold text-slate-700 focus:ring-0 placeholder:font-normal"
+                        placeholder="Select City..."
+                        list={`city-suggest-${idx}`}
+                        value={extraFilter[idx] ?? (city || "")}
+                        onChange={(e) => {
+                          const v = e.target.value;
                           setExtraFilter((arr) => {
                             const next = arr.slice();
-                            next[idx] = match.name;
+                            next[idx] = v;
                             return next;
                           });
-                          setEditingExtras((prev) => ({ ...prev, [idx]: false }));
-                        }
-                      }
-                    }}
-                    title="Search and select your next city"
-                  />
-                )}
-                <datalist id={`city-suggest-${idx}`}>
-                  {destCities.map((c) => (
-                    <option key={c.name} value={c.name} label={`${c.airport ? "✈️ " : ""}${c.name}${c.airport && c.airport.code ? ` (${c.airport.code})` : ""}`} />
-                  ))}
-                </datalist>
-                <TransportSelector idx={idx + 1} from={idx === 0 ? first : extra[idx - 1]} to={city} />
-                <input
-                  className="w-24 border rounded p-2"
-                  type="number"
-                  min={1}
-                  value={extraDays[idx] ?? 3}
-                  onChange={(e) => setExtraDays((arr) => {
-                    const next = arr.slice();
-                    next[idx] = Number(e.target.value);
-                    return next;
-                  })}
-                  title="Stay days"
-                />
-                {finalCity && finalCity === (city || "") ? (
-                  <span className="pill pill-blue">Final</span>
-                ) : (
-                  <button
-                    className="pill"
-                    onClick={() => {
-                      if (city) {
-                        setFinalCity(city);
-                        setPlanReturn(true);
-                        setReturnStops([]);
-                        setReturnFilters([]);
-                      }
-                    }}
-                    title="Return from this city (End of outbound trip)"
-                  >
-                    Return ↩
-                  </button>
-                )}
-                <button
-                  className="btn btn-secondary"
-                  title="Remove city"
-                  aria-label="Remove city"
-                  onClick={() => {
-                    setExtra((arr) => arr.filter((_, i) => i !== idx));
-                    setExtraDays((arr) => arr.filter((_, i) => i !== idx));
-                    setExtraFilter((arr) => arr.filter((_, i) => i !== idx));
-                    if (finalCity && finalCity === city) { setFinalCity(""); setReturnStops([]); setReturnFilters([]); }
-                    setReturnStops((arr) => arr.filter((s) => s !== city));
-                    setReturnFilters((arr) => arr.filter((s) => s !== city));
-                  }}
-                >
-                  Remove
-                </button>
+                          const exact = destCities.find((c) => c.name.toLowerCase() === v.toLowerCase());
+                          if (exact) {
+                            setExtra((arr) => arr.map((x, i) => i === idx ? exact.name : x));
+                            setEditingExtras((prev) => ({ ...prev, [idx]: false }));
+                            return;
+                          }
+                          const matches = destCities.filter((c) => c.name.toLowerCase().startsWith(v.toLowerCase()));
+                          if (v.length >= 2 && matches.length === 1) {
+                            setExtra((arr) => arr.map((x, i) => i === idx ? matches[0].name : x));
+                            setExtraFilter((arr) => {
+                              const next = arr.slice();
+                              next[idx] = matches[0].name;
+                              return next;
+                            });
+                            setEditingExtras((prev) => ({ ...prev, [idx]: false }));
+                            return;
+                          }
+                          if (!v) {
+                            setExtra((arr) => arr.map((x, i) => i === idx ? "" : x));
+                            return;
+                          }
+                        }}
+                        onBlur={() => {
+                          const v = extraFilter[idx] ?? "";
+                          const match = destCities.find((c) => c.name.toLowerCase() === v.toLowerCase());
+                          if (match) {
+                            setExtra((arr) => arr.map((x, i) => i === idx ? match.name : x));
+                            setEditingExtras((prev) => ({ ...prev, [idx]: false }));
+                          } else if (city) {
+                            // Revert to previously selected city if current input is invalid
+                            setEditingExtras((prev) => ({ ...prev, [idx]: false }));
+                            // Also restore the filter text to match the city
+                            setExtraFilter((arr) => {
+                              const next = arr.slice();
+                              next[idx] = city;
+                              return next;
+                            });
+                          }
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            const v = extraFilter[idx] ?? "";
+                            const match = destCities.find((c) => c.name.toLowerCase().startsWith(v.toLowerCase()));
+                            if (match) {
+                              setExtra((arr) => arr.map((x, i) => i === idx ? match.name : x));
+                              setExtraFilter((arr) => {
+                                const next = arr.slice();
+                                next[idx] = match.name;
+                                return next;
+                              });
+                              setEditingExtras((prev) => ({ ...prev, [idx]: false }));
+                            }
+                          }
+                        }}
+                        title="Search and select your next city"
+                      />
+                    )}
+                    <datalist id={`city-suggest-${idx}`}>
+                      {destCities.map((c) => (
+                        <option key={c.name} value={c.name} label={`${c.airport ? "✈️ " : ""}${c.name}${c.airport && c.airport.code ? ` (${c.airport.code})` : ""}`} />
+                      ))}
+                    </datalist>
+                 </div>
               </div>
-              {!city ? (<div className="text-xs text-slate-500 mt-1">Select your next city</div>) : <div className="text-xs text-slate-500 mt-1">Stay: {(extraDays[idx] ?? 3)} days</div>}
-              {finalCity && finalCity === city ? (<div className="text-xs text-blue-700 mt-1">Final</div>) : null}
+
+              <div className="w-[280px] shrink-0 flex items-center justify-between gap-2 bg-slate-50 rounded-lg p-2 border border-slate-100">
+                  <div className="flex flex-col items-center flex-1 min-w-0">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Travel</span>
+                      <TransportSelector idx={idx + 1} from={idx === 0 ? first : extra[idx - 1]} to={city} />
+                  </div>
+                  
+                  <div className="w-px h-8 bg-slate-200 shrink-0"></div>
+
+                  <div className="flex flex-col w-[70px] shrink-0">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Stay</span>
+                      <div className="flex items-center gap-1 justify-center">
+                          <input
+                            className="w-12 bg-white border border-slate-200 rounded p-1 text-center text-sm font-bold text-slate-700 outline-none focus:ring-1 focus:ring-blue-500"
+                            type="number"
+                            min={1}
+                            value={extraDays[idx] ?? 3}
+                            onChange={(e) => setExtraDays((arr) => {
+                              const next = arr.slice();
+                              next[idx] = Number(e.target.value);
+                              return next;
+                            })}
+                            title="Stay days"
+                          />
+                          <span className="text-xs text-slate-500 font-medium">days</span>
+                      </div>
+                  </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                 <div className="w-[120px] flex justify-end">
+                   {finalCity && finalCity === (city || "") ? (
+                      <span className="px-3 py-1.5 bg-blue-100 text-blue-700 text-xs font-bold rounded-lg border border-blue-200 shadow-sm cursor-default whitespace-nowrap">
+                          Final Return ↩
+                      </span>
+                   ) : (
+                      <button
+                          className="px-3 py-1.5 text-xs font-semibold text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors border border-transparent hover:border-blue-100 whitespace-nowrap"
+                          onClick={() => {
+                            if (city) {
+                              setFinalCity(city);
+                              setPlanReturn(true);
+                              setReturnStops([]);
+                              setReturnFilters([]);
+                            }
+                          }}
+                          title="Return from this city (End of outbound trip)"
+                      >
+                          Return ↩
+                      </button>
+                   )}
+                 </div>
+                 
+                 <button
+                    className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                    title="Remove city"
+                    aria-label="Remove city"
+                    onClick={() => {
+                      setExtra((arr) => arr.filter((_, i) => i !== idx));
+                      setExtraDays((arr) => arr.filter((_, i) => i !== idx));
+                      setExtraFilter((arr) => arr.filter((_, i) => i !== idx));
+                      if (finalCity && finalCity === city) { setFinalCity(""); setReturnStops([]); setReturnFilters([]); }
+                      setReturnStops((arr) => arr.filter((s) => s !== city));
+                      setReturnFilters((arr) => arr.filter((s) => s !== city));
+                    }}
+                 >
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/><path fillRule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/></svg>
+                 </button>
+              </div>
             </div>
           ))}
-          <div className="mt-3 flex items-center gap-2">
-            <button
-              className="btn btn-secondary"
-              disabled={[start, ...extra, first].filter(Boolean).length >= maxCities}
-              title={[start, ...extra, first].filter(Boolean).length >= maxCities ? "Max 5 cities reached — remove a city to add another" : "Add another city"}
-              aria-disabled={[start, ...extra, first].filter(Boolean).length >= maxCities}
-              onClick={() => {
-                setExtra((arr) => arr.length < maxCities - 2 ? [...arr, ""] : arr);
-                setExtraDays((arr) => arr.length < maxCities - 2 ? [...arr, 3] : arr);
-                setExtraFilter((arr) => arr.length < maxCities - 2 ? [...arr, ""] : arr);
-              }}
-            >+ Add more cities ✨</button>
-            {planReturn ? (
-              <button
-                className="btn btn-secondary"
-                title={finalCity ? "Add a stop on the return route" : "Choose a Final city first"}
-                disabled={!finalCity}
-                aria-disabled={!finalCity}
-                onClick={() => {
-                  if (!finalCity) return;
-                  setReturnStops((arr) => [...arr, ""]);
-                  setReturnFilters((arr) => [...arr, ""]);
-                }}
-              >+ Add return stop ↩︎</button>
-            ) : null}
-            <button
-              className={`pill ${planReturn ? "pill-blue" : ""}`}
-              onClick={() => {
-                if (planReturn) {
-                  setPlanReturn(false);
-                  setFinalCity("");
-                  setReturnStops([]);
-                  setReturnFilters([]);
-                } else {
-                  setPlanReturn(true);
-                }
-              }}
-              title={planReturn ? "Disable return planning" : "Enable return planning"}
-            >
-              {planReturn ? "Return planned" : "Plan return"}
-            </button>
-            <div className="text-sm text-slate-600">{[start, ...extra, first].filter(Boolean).length} / {maxCities} cities</div>
-          </div>
+
           {returnStops.map((city, idx) => {
             const hasBridge = planReturn && finalCity && finalCity !== names[names.length - 1];
             const baseIdx = names.length - 1 + (hasBridge ? 1 : 0);
             const transportIdx = baseIdx + idx;
             return (
-            <div key={`ret-${idx}`} className="mt-3">
-              <div className="text-xs mb-1">Return stop {idx + 1}</div>
-              <div className="flex items-center gap-2">
-                {city && !editingReturns[idx] ? (
-                  <div
-                    className="flex-1 border rounded p-2 bg-blue-50 text-blue-900 cursor-pointer flex items-center justify-between group"
-                    onClick={() => setEditingReturns((prev) => ({ ...prev, [idx]: true }))}
-                    title="Click to edit stop"
-                  >
-                    <span className="font-medium">{city}</span>
-                    <span className="text-xs text-blue-400 group-hover:text-blue-600">✎ Edit</span>
-                  </div>
-                ) : (
-                  <input
-                    autoFocus={!!editingReturns[idx]}
-                    className="flex-1 border rounded p-2"
-                    placeholder="Search & select return stop"
-                    list={`ret-suggest-${idx}`}
-                    value={returnFilters[idx] ?? (city || "")}
-                    onChange={(e) => {
-                      const v = e.target.value;
-                      setReturnFilters((arr) => {
-                        const next = arr.slice();
-                        next[idx] = v;
-                        return next;
-                      });
-                      const exact = destCities.find((c) => c.name.toLowerCase() === v.toLowerCase());
-                      if (exact) {
-                        setReturnStops((arr) => arr.map((x, i) => i === idx ? exact.name : x));
-                        setEditingReturns((prev) => ({ ...prev, [idx]: false }));
-                        return;
-                      }
-                      const matches = destCities.filter((c) => c.name.toLowerCase().startsWith(v.toLowerCase()));
-                      if (v.length >= 2 && matches.length === 1) {
-                        setReturnStops((arr) => arr.map((x, i) => i === idx ? matches[0].name : x));
-                        setReturnFilters((arr) => {
-                          const next = arr.slice();
-                          next[idx] = matches[0].name;
-                          return next;
-                        });
-                        setEditingReturns((prev) => ({ ...prev, [idx]: false }));
-                        return;
-                      }
-                      if (!v) {
-                        setReturnStops((arr) => arr.map((x, i) => i === idx ? "" : x));
-                      }
-                    }}
-                    onBlur={() => {
-                      const v = returnFilters[idx] ?? "";
-                      const match = destCities.find((c) => c.name.toLowerCase() === v.toLowerCase());
-                      if (match) {
-                        setReturnStops((arr) => arr.map((x, i) => i === idx ? match.name : x));
-                        setEditingReturns((prev) => ({ ...prev, [idx]: false }));
-                      } else if (city) {
-                        setEditingReturns((prev) => ({ ...prev, [idx]: false }));
-                        setReturnFilters((arr) => {
-                          const next = arr.slice();
-                          next[idx] = city;
-                          return next;
-                        });
-                      }
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        const v = returnFilters[idx] ?? "";
-                        const match = destCities.find((c) => c.name.toLowerCase().startsWith(v.toLowerCase()));
-                        if (match) {
-                          setReturnStops((arr) => arr.map((x, i) => i === idx ? match.name : x));
+              <div
+                key={`ret-${idx}`}
+                className="group relative flex items-center gap-3 p-3 bg-white border border-slate-200 rounded-xl shadow-sm mb-3 transition-all hover:shadow-md hover:border-blue-300"
+              >
+                <div className="flex-1 min-w-0">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Return Stop {idx + 1}</div>
+                  {city && !editingReturns[idx] ? (
+                    <div
+                      className="text-base font-semibold text-slate-800 cursor-pointer hover:text-blue-600 truncate flex items-center gap-2"
+                      onClick={() => setEditingReturns((prev) => ({ ...prev, [idx]: true }))}
+                      title="Click to edit stop"
+                    >
+                      {city}
+                      <svg className="w-3.5 h-3.5 text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                    </div>
+                  ) : (
+                    <div className="relative">
+                      <input
+                        autoFocus={!!editingReturns[idx]}
+                        className="w-full text-base font-medium text-slate-800 border-b-2 border-blue-500 focus:outline-none focus:border-blue-600 bg-transparent px-0 py-0.5 placeholder:font-normal"
+                        placeholder="Search & select return stop"
+                        list={`ret-suggest-${idx}`}
+                        value={returnFilters[idx] ?? (city || "")}
+                        onChange={(e) => {
+                          const v = e.target.value;
                           setReturnFilters((arr) => {
                             const next = arr.slice();
-                            next[idx] = match.name;
+                            next[idx] = v;
                             return next;
                           });
-                          setEditingReturns((prev) => ({ ...prev, [idx]: false }));
-                        }
-                      }
+                          const exact = destCities.find((c) => c.name.toLowerCase() === v.toLowerCase());
+                          if (exact) {
+                            setReturnStops((arr) => arr.map((x, i) => i === idx ? exact.name : x));
+                            setEditingReturns((prev) => ({ ...prev, [idx]: false }));
+                            return;
+                          }
+                          const matches = destCities.filter((c) => c.name.toLowerCase().startsWith(v.toLowerCase()));
+                          if (v.length >= 2 && matches.length === 1) {
+                            setReturnStops((arr) => arr.map((x, i) => i === idx ? matches[0].name : x));
+                            setReturnFilters((arr) => {
+                              const next = arr.slice();
+                              next[idx] = matches[0].name;
+                              return next;
+                            });
+                            setEditingReturns((prev) => ({ ...prev, [idx]: false }));
+                            return;
+                          }
+                          if (!v) {
+                            setReturnStops((arr) => arr.map((x, i) => i === idx ? "" : x));
+                          }
+                        }}
+                        onBlur={() => {
+                          const v = returnFilters[idx] ?? "";
+                          const match = destCities.find((c) => c.name.toLowerCase() === v.toLowerCase());
+                          if (match) {
+                            setReturnStops((arr) => arr.map((x, i) => i === idx ? match.name : x));
+                            setEditingReturns((prev) => ({ ...prev, [idx]: false }));
+                          } else if (city) {
+                            setEditingReturns((prev) => ({ ...prev, [idx]: false }));
+                            setReturnFilters((arr) => {
+                              const next = arr.slice();
+                              next[idx] = city;
+                              return next;
+                            });
+                          }
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            const v = returnFilters[idx] ?? "";
+                            const match = destCities.find((c) => c.name.toLowerCase().startsWith(v.toLowerCase()));
+                            if (match) {
+                              setReturnStops((arr) => arr.map((x, i) => i === idx ? match.name : x));
+                              setReturnFilters((arr) => {
+                                const next = arr.slice();
+                                next[idx] = match.name;
+                                return next;
+                              });
+                              setEditingReturns((prev) => ({ ...prev, [idx]: false }));
+                            }
+                          }
+                        }}
+                        title="Search and select your return stop"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                <div className="w-[280px] shrink-0 flex items-center justify-center bg-slate-50 rounded-lg p-2 border border-slate-100">
+                  <div className="flex flex-col items-center">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Travel</span>
+                    <TransportSelector idx={transportIdx} from={idx === 0 ? finalCity : returnStops[idx - 1]} to={city} />
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <div className="w-[120px]"></div>
+                  <button
+                    className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                    title="Remove stop"
+                    aria-label="Remove stop"
+                    onClick={() => {
+                      setReturnStops((arr) => arr.filter((_, i) => i !== idx));
+                      setReturnFilters((arr) => arr.filter((_, i) => i !== idx));
                     }}
-                    title="Search and select your return stop"
-                  />
-                )}
-                <TransportSelector idx={transportIdx} from={idx === 0 ? finalCity : returnStops[idx - 1]} to={city} />
-                <button
-                  className="btn btn-secondary"
-                  title="Remove stop"
-                  aria-label="Remove stop"
-                  onClick={() => {
-                    setReturnStops((arr) => arr.filter((_, i) => i !== idx));
-                    setReturnFilters((arr) => arr.filter((_, i) => i !== idx));
-                  }}
-                >
-                  Remove
-                </button>
+                  >
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/><path fillRule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/></svg>
+                  </button>
+                </div>
               </div>
-            </div>
-          );})}
+            );
+          })}
           <div className="mt-3">
             <div className="route-dots">
               {points.map((p, i) => (
@@ -1427,7 +1459,9 @@ export function SelectCitiesBubble({ originCountry, destCountry, onContinue }: {
               </div>
             ) : null}
           </div>
-          <button className="btn btn-primary btn-lg mt-3" onClick={() => {
+        </div>
+        <div className="shrink-0 p-3 border-t bg-white z-10">
+          <button className="btn btn-primary btn-lg w-full" onClick={() => {
             const totalDays = firstDays + extraDays.reduce((s, d) => s + (d || 0), 0);
             const itinerary = points.map((p) => p.name);
             const finalModes: { [key: number]: "flight" | "train" | "car" } = {};
@@ -1448,7 +1482,8 @@ export function SelectCitiesBubble({ originCountry, destCountry, onContinue }: {
             )}
           </button>
         </div>
-      )}
+      </div>
+    )}
     </div>
   );
 }

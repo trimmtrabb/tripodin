@@ -60,131 +60,207 @@ export function FlightModal({ open, onClose, originCountry, destCountry, totalSt
   if (!open) return null;
   return (
     <div className="fixed inset-0 bg-black/40 grid place-items-center z-[100]" onClick={onClose}>
-      <div className="w-full max-w-2xl bg-white rounded-2xl overflow-hidden shadow-xl" onClick={(e) => e.stopPropagation()}>
-        <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-4 flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-lg bg-white/20 grid place-items-center text-xl">✈️</div>
-            <div className="text-lg font-semibold">Book Flight</div>
-          </div>
-          <button onClick={onClose} className="bg-white/20 hover:bg-white/30 text-white px-3 py-1 rounded">Close</button>
-        </div>
-        <div className="p-4">
-        <div className="text-sm text-slate-600 mb-3">
-          {fullItinerary && fullItinerary.length > 0 ? (
-            <div className="flex flex-wrap gap-1 items-center">
-              {fullItinerary.map((city, i) => (
-                <React.Fragment key={i}>
-                  <span className="font-medium">{city}</span>
-                  {i < fullItinerary.length - 1 && <span className="text-slate-400">→</span>}
-                </React.Fragment>
-              ))}
-            </div>
-          ) : (
-            <>{from} ⇄ {to}</>
-          )}
-          {totalDays ? <div className="text-xs text-slate-500 mt-1">Total Trip Duration: {totalDays} days</div> : null}
-        </div>
-        <div className="grid md:grid-cols-2 gap-3">
-          <div>
-            <div className="text-sm mb-1">From</div>
-            <select className="w-full border rounded p-2" value={from} onChange={(e) => setFrom(e.target.value)}>
-              {originCities.map((c) => (<option key={c.name} value={c.name}>{c.name} {c.airport ? `(${c.airport.name} (${c.airport.code}))` : ""}</option>))}
-            </select>
-          </div>
-          <div>
-            <div className="text-sm mb-1">To</div>
-            <select className="w-full border rounded p-2" value={to} onChange={(e) => setTo(e.target.value)}>
-              {destCities.map((c) => (<option key={c.name} value={c.name}>{c.name} {c.airport ? `(${c.airport.name} (${c.airport.code}))` : ""}</option>))}
-            </select>
-          </div>
-        </div>
-        <div className="mt-3 flex gap-2">
-          <button className={`pill ${tripType === "oneway" ? "pill-blue" : ""}`} onClick={() => setTripType("oneway")}>One‑way</button>
-          <button className={`pill ${tripType === "round" ? "pill-blue" : ""}`} onClick={() => setTripType("round")}>Round‑trip</button>
-          <button className={`pill ${tripType === "openjaw" ? "pill-blue" : ""}`} onClick={() => setTripType("openjaw")}>Open‑jaw</button>
-        </div>
-        {tripType === "round" ? (
-          <div className="mt-3">
-            <div className="text-sm mb-1">Return From (optional, different city)</div>
-            <select className="w-full border rounded p-2" value={retFrom} onChange={(e) => setRetFrom(e.target.value)}>
-              <option value="">Same as arrival</option>
-              {destCities.map((c) => (<option key={c.name} value={c.name}>{c.name}</option>))}
-            </select>
-            <div className="text-xs text-slate-500 mt-1">Leaving blank means return flight will start from {to}.</div>
-          </div>
-        ) : tripType === "openjaw" ? (
-          <div className="mt-3">
-            <div className="flex items-center gap-2">
-              <span className="pill pill-blue">Open‑jaw</span>
-              <div className="text-sm">Return From</div>
-            </div>
-            <select className="w-full border rounded p-2 mt-1" value={retFrom} onChange={(e) => setRetFrom(e.target.value)}>
-              {destCities.filter((c) => c.name !== to).map((c) => (<option key={c.name} value={c.name}>{c.name}{c.airport?.code ? ` (${c.airport.code})` : ""}</option>))}
-            </select>
-            <div className="text-xs text-slate-500 mt-1">Recommended return city is pre‑selected based on proximity and hub presence.</div>
-            <div className="card p-3 mt-2">
-              <div className="text-sm font-medium mb-1">Ticket Preview</div>
-              <div className="text-sm">Outbound: {from} → {to}</div>
-              <div className="text-sm">Return: {retFrom || "—"} → {from}</div>
+      <div className="w-full max-w-2xl bg-white rounded-2xl overflow-hidden shadow-xl max-h-[90vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+        <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-5 flex justify-between items-center shrink-0 shadow-md z-10">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-white/20 grid place-items-center text-2xl backdrop-blur-sm">✈️</div>
+            <div>
+              <div className="text-xl font-bold">Book Flight</div>
+              <div className="text-xs text-blue-100 font-medium tracking-wide opacity-90">SECURE BOOKING</div>
             </div>
           </div>
-        ) : tripType === "multicity" ? (
-          <div className="mt-3 text-sm text-slate-600">For complex itineraries, consider the Multi‑City planner from the dashboard.</div>
-        ) : null}
-        <div className="grid md:grid-cols-3 gap-3 mt-3">
-          <div>
-            <div className="text-sm mb-1">Trip Type</div>
-            <select className="w-full border rounded p-2" value={tripType} onChange={(e) => setTripType(e.target.value as any)}>
-              <option value="oneway">One-way</option>
-              <option value="round">Round-trip</option>
-              <option value="openjaw">Open-jaw</option>
-              <option value="multicity">Multi-city</option>
-            </select>
-          </div>
-          <div>
-            <div className="text-sm mb-1">Departure Date</div>
-            <input className="w-full border rounded p-2" type="date" value={dep} onChange={(e) => setDep(e.target.value)} />
-          </div>
-          <div>
-            <div className="text-sm mb-1">Return Date</div>
-            <input className="w-full border rounded p-2" type="date" value={ret} onChange={(e) => setRet(e.target.value)} disabled={tripType !== "round"} />
-          </div>
+          <button onClick={onClose} className="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg transition-colors text-sm font-medium">Close</button>
         </div>
-        <div className="mt-3">
-          <div className="text-sm mb-1">Passengers</div>
-          <input className="w-full border rounded p-2" type="number" min={1} value={pax} onChange={(e) => setPax(Number(e.target.value))} />
-        </div>
-        <div className="grid md:grid-cols-2 gap-3 mt-3">
-          <div className="card p-3">
-            <div className="font-medium mb-1">Travel Details</div>
-            <div className="text-xs mb-1">Type</div>
-            <div className="pill pill-blue w-fit">{tripType === "oneway" ? "One‑way" : tripType === "round" ? "Round trip" : tripType === "openjaw" ? "Open‑jaw" : "Multi‑city"}</div>
-            <div className="grid grid-cols-2 gap-2 mt-3">
-              <div>
-                <div className="text-xs mb-1">Departure</div>
-                <div className="text-sm">{dep}</div>
+        <div className="p-6 overflow-y-auto custom-scrollbar bg-slate-50/50">
+          
+          {/* Trip Preferences Section */}
+          <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm mb-6">
+            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Trip Preferences</h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div className="md:col-span-1">
+                <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">From</label>
+                <div className="relative group">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <span className="text-slate-400">🛫</span>
+                  </div>
+                  <select 
+                    className="w-full border border-slate-200 rounded-lg py-2.5 pl-10 pr-4 text-slate-700 font-medium focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-slate-50 group-hover:bg-white appearance-none" 
+                    value={from} 
+                    onChange={(e) => setFrom(e.target.value)}
+                  >
+                    {originCities.map((c) => (<option key={c.name} value={c.name}>{c.name} {c.airport ? `(${c.airport.name} (${c.airport.code}))` : ""}</option>))}
+                  </select>
+                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-slate-400">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                  </div>
+                </div>
               </div>
+
+              <div className="md:col-span-1">
+                <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">To</label>
+                <div className="relative group">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <span className="text-slate-400">🛬</span>
+                  </div>
+                  <select 
+                    className="w-full border border-slate-200 rounded-lg py-2.5 pl-10 pr-4 text-slate-700 font-medium focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-slate-50 group-hover:bg-white appearance-none" 
+                    value={to} 
+                    onChange={(e) => setTo(e.target.value)}
+                  >
+                    {destCities.map((c) => (<option key={c.name} value={c.name}>{c.name} {c.airport ? `(${c.airport.name} (${c.airport.code}))` : ""}</option>))}
+                  </select>
+                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-slate-400">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                  </div>
+                </div>
+              </div>
+
+              <div className="md:col-span-2">
+                <div className="flex gap-2 bg-slate-50 p-1.5 rounded-lg border border-slate-100 w-fit">
+                  <button className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${tripType === "oneway" ? "bg-white text-blue-600 shadow-sm ring-1 ring-slate-200" : "text-slate-500 hover:text-slate-700"}`} onClick={() => setTripType("oneway")}>One‑way</button>
+                  <button className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${tripType === "round" ? "bg-white text-blue-600 shadow-sm ring-1 ring-slate-200" : "text-slate-500 hover:text-slate-700"}`} onClick={() => setTripType("round")}>Round‑trip</button>
+                  <button className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${tripType === "openjaw" ? "bg-white text-blue-600 shadow-sm ring-1 ring-slate-200" : "text-slate-500 hover:text-slate-700"}`} onClick={() => setTripType("openjaw")}>Open‑jaw</button>
+                </div>
+              </div>
+
               {tripType === "round" ? (
-                <div>
-                  <div className="text-xs mb-1">Return</div>
-                  <div className="text-sm">{ret}</div>
+                <div className="md:col-span-2">
+                  <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">Return From (Optional)</label>
+                  <div className="relative group">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <span className="text-slate-400">↩️</span>
+                    </div>
+                    <select 
+                      className="w-full border border-slate-200 rounded-lg py-2.5 pl-10 pr-4 text-slate-700 font-medium focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-slate-50 group-hover:bg-white appearance-none" 
+                      value={retFrom} 
+                      onChange={(e) => setRetFrom(e.target.value)}
+                    >
+                      <option value="">Same as arrival ({to})</option>
+                      {destCities.map((c) => (<option key={c.name} value={c.name}>{c.name}</option>))}
+                    </select>
+                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-slate-400">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </div>
+                  </div>
+                </div>
+              ) : tripType === "openjaw" ? (
+                <div className="md:col-span-2 bg-blue-50 p-4 rounded-xl border border-blue-100">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider">Open-Jaw</span>
+                    <div className="text-sm font-semibold text-blue-900">Return Configuration</div>
+                  </div>
+                  <label className="block text-xs font-semibold text-blue-800 mb-1.5 uppercase tracking-wide">Return From</label>
+                  <select 
+                    className="w-full border border-blue-200 rounded-lg py-2.5 px-3 text-blue-900 font-medium focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white appearance-none mb-2" 
+                    value={retFrom} 
+                    onChange={(e) => setRetFrom(e.target.value)}
+                  >
+                    {destCities.filter((c) => c.name !== to).map((c) => (<option key={c.name} value={c.name}>{c.name}{c.airport?.code ? ` (${c.airport.code})` : ""}</option>))}
+                  </select>
+                  <div className="text-xs text-blue-600/80">Recommended return city is pre‑selected based on proximity and hub presence.</div>
                 </div>
               ) : null}
-            </div>
-            <div className="grid grid-cols-2 gap-2 mt-3">
-              <div>
-                <div className="text-xs mb-1">Passengers</div>
-                <div className="text-sm">{pax}</div>
+
+              <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-5">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">Departure Date</label>
+                  <input className="w-full border border-slate-200 rounded-lg py-2.5 px-3 text-slate-700 font-medium focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-slate-50 focus:bg-white" type="date" value={dep} onChange={(e) => setDep(e.target.value)} />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">Return Date</label>
+                  <input className="w-full border border-slate-200 rounded-lg py-2.5 px-3 text-slate-700 font-medium focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-slate-50 focus:bg-white disabled:opacity-50 disabled:cursor-not-allowed" type="date" value={ret} onChange={(e) => setRet(e.target.value)} disabled={tripType !== "round" && tripType !== "openjaw"} />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">Passengers</label>
+                  <div className="relative">
+                    <input 
+                      className="w-full border border-slate-200 rounded-lg py-2.5 px-3 text-slate-700 font-medium focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-slate-50 focus:bg-white" 
+                      type="number" 
+                      min={1} 
+                      value={pax} 
+                      onChange={(e) => setPax(Number(e.target.value))} 
+                    />
+                    <span className="absolute right-3 top-2.5 text-slate-400 text-sm">pax</span>
+                  </div>
+                </div>
               </div>
-              {totalDays ? (
-                <div>
-                  <div className="text-xs mb-1">Total Days</div>
-                  <div className="text-sm font-bold text-blue-700 bg-blue-50 border border-blue-100 rounded px-2 py-1 w-fit">{totalDays} days</div>
-                </div>
-              ) : null}
             </div>
           </div>
-        </div>
+
+          {/* Ticket Preview */}
+          <div className="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden relative mb-6 transform transition-all hover:scale-[1.01] duration-300">
+            {/* Decorative top bar */}
+            <div className="h-1.5 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500"></div>
+            
+            <div className="p-6">
+              <div className="flex justify-between items-start mb-6">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="bg-blue-100 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider">Confirmed</span>
+                    <span className="text-slate-400 text-xs">• TripOdin</span>
+                  </div>
+                  <h2 className="text-2xl font-bold text-slate-800 tracking-tight">Flight Reservation</h2>
+                </div>
+                {totalDays ? (
+                  <div className="text-right bg-blue-50 px-3 py-2 rounded-lg border border-blue-100">
+                    <div className="text-[10px] text-blue-400 uppercase tracking-widest font-bold">Duration</div>
+                    <div className="text-lg font-black text-blue-600 leading-none">{totalDays} <span className="text-sm font-medium text-blue-400">Days</span></div>
+                  </div>
+                ) : null}
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-y-6 gap-x-4">
+                <div className="col-span-2">
+                  <div className="text-[10px] text-slate-400 uppercase tracking-widest font-bold mb-1">Route</div>
+                  <div className="font-bold text-slate-700 text-lg leading-tight flex items-center gap-2">
+                    {from} <span className="text-slate-300">→</span> {to}
+                    {tripType === "round" && <span className="text-slate-300">→</span>}
+                    {tripType === "round" ? (retFrom || from) : null}
+                  </div>
+                </div>
+                
+                <div>
+                  <div className="text-[10px] text-slate-400 uppercase tracking-widest font-bold mb-1">Departure</div>
+                  <div className="font-bold text-slate-700">{new Date(dep).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</div>
+                </div>
+                
+                <div>
+                  <div className="text-[10px] text-slate-400 uppercase tracking-widest font-bold mb-1">Return</div>
+                  <div className="font-bold text-slate-700">
+                    {(tripType === "round" || tripType === "openjaw") ? new Date(ret).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : "—"}
+                  </div>
+                </div>
+
+                <div>
+                  <div className="text-[10px] text-slate-400 uppercase tracking-widest font-bold mb-1">Passengers</div>
+                  <div className="font-bold text-slate-700">{pax} Pax</div>
+                </div>
+
+                <div>
+                   <div className="text-[10px] text-slate-400 uppercase tracking-widest font-bold mb-1">Class</div>
+                   <div className="font-bold text-slate-700">Economy</div>
+                </div>
+
+                <div className="col-span-2">
+                   <div className="text-[10px] text-slate-400 uppercase tracking-widest font-bold mb-1">Type</div>
+                   <span className="bg-slate-100 text-slate-600 text-xs font-bold px-2 py-1 rounded uppercase tracking-wide">
+                     {tripType === "oneway" ? "One‑way" : tripType === "round" ? "Round trip" : tripType === "openjaw" ? "Open‑jaw" : "Multi‑city"}
+                   </span>
+                </div>
+              </div>
+
+              {/* Barcode Section */}
+              <div className="mt-6 pt-6 border-t-2 border-dashed border-slate-200 flex justify-between items-end">
+                <div className="text-xs text-slate-400 font-mono tracking-widest">
+                  REF: {Math.random().toString(36).substring(2, 10).toUpperCase()}
+                </div>
+                <svg className="h-8 w-32 text-slate-800 opacity-80" viewBox="0 0 100 30" preserveAspectRatio="none">
+                  <path d="M0,0 h2 v30 h-2 z M4,0 h1 v30 h-1 z M7,0 h3 v30 h-3 z M12,0 h1 v30 h-1 z M15,0 h2 v30 h-2 z M20,0 h3 v30 h-3 z M25,0 h1 v30 h-1 z M30,0 h2 v30 h-2 z M35,0 h1 v30 h-1 z M40,0 h3 v30 h-3 z M45,0 h1 v30 h-1 z M50,0 h2 v30 h-2 z M55,0 h1 v30 h-1 z M60,0 h3 v30 h-3 z M65,0 h2 v30 h-2 z M70,0 h1 v30 h-1 z M75,0 h2 v30 h-2 z M80,0 h3 v30 h-3 z M85,0 h1 v30 h-1 z M90,0 h2 v30 h-2 z M95,0 h1 v30 h-1 z" fill="currentColor" />
+                </svg>
+              </div>
+            </div>
+          </div>
         <div className="mt-3 flex gap-2">
           <button className="btn btn-primary" onClick={() => setShowConf(true)}>Search via Amadeus</button>
         </div>
@@ -204,6 +280,14 @@ export function FlightModal({ open, onClose, originCountry, destCountry, totalSt
             )}
           </div>
         ) : null}
+        </div>
+        {/* Footer */}
+        <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-between items-center text-sm text-slate-500 shrink-0">
+          <div>Trusted by 10,000+ travelers</div>
+          <div className="flex gap-4">
+            <span>🔒 SSL Secured</span>
+            <span>24/7 Support</span>
+          </div>
         </div>
       </div>
     </div>
@@ -231,93 +315,172 @@ export function HotelModal({ open, onClose, destCountry, totalStay }: { open: bo
     return typeof totalStay === "number" ? totalStay : daysBetween(inDate, outDate);
   }, [totalStay, inDate, outDate]);
   useEffect(() => {
+    if (totalStay) {
+      const d = new Date(inDate);
+      d.setDate(d.getDate() + totalStay);
+      setOutDate(d.toISOString().slice(0, 10));
+    }
+  }, [totalStay, inDate]);
+  useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
   if (!open) return null;
   return (
-    <div className="fixed inset-0 bg-black/40 grid place-items-center z-[100]" onClick={onClose}>
-      <div className="w-full max-w-2xl bg-white rounded-2xl overflow-hidden shadow-xl" onClick={(e) => e.stopPropagation()}>
-        <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-4 flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-lg bg-white/20 grid place-items-center text-xl">🏨</div>
-            <div className="text-lg font-semibold">Book Hotel</div>
-          </div>
-          <button onClick={onClose} className="bg-white/20 hover:bg-white/30 text-white px-3 py-1 rounded">Close</button>
-        </div>
-        <div className="p-4">
-        <div className="grid md:grid-cols-2 gap-3">
-          <div>
-            <div className="text-sm mb-1">City</div>
-            <select className="w-full border rounded p-2" value={city} onChange={(e) => setCity(e.target.value)}>
-              {cities.map((c) => (<option key={c.name} value={c.name}>{c.name}</option>))}
-            </select>
-          </div>
-          <div>
-            <div className="text-sm mb-1">Rooms</div>
-            <input className="w-full border rounded p-2" type="number" min={1} value={rooms} onChange={(e) => setRooms(Number(e.target.value))} />
-          </div>
-        </div>
-        <div className="grid md:grid-cols-2 gap-3 mt-3">
-          <div>
-            <div className="text-sm mb-1">Check-in</div>
-            <input className="w-full border rounded p-2" type="date" value={inDate} onChange={(e) => setInDate(e.target.value)} />
-          </div>
-          <div>
-            <div className="text-sm mb-1">Check-out</div>
-            <input className="w-full border rounded p-2" type="date" value={outDate} onChange={(e) => setOutDate(e.target.value)} />
-          </div>
-        </div>
-        <div className="mt-3">
-          <div className="text-sm mb-1">Guests</div>
-          <input className="w-full border rounded p-2" type="number" min={1} value={guests} onChange={(e) => setGuests(Number(e.target.value))} />
-        </div>
-        <div className="grid md:grid-cols-2 gap-3 mt-3">
-          <div className="card p-3">
-            <div className="font-medium mb-1">Travel Details</div>
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <div className="text-xs mb-1">City</div>
-                <div className="text-sm">{city}</div>
-              </div>
-              <div>
-                <div className="text-xs mb-1">Rooms</div>
-                <div className="text-sm">{rooms}</div>
-              </div>
-              <div>
-                <div className="text-xs mb-1">Check‑in</div>
-                <div className="text-sm">{inDate}</div>
-              </div>
-              <div>
-                <div className="text-xs mb-1">Check‑out</div>
-                <div className="text-sm">{outDate}</div>
-              </div>
-              <div>
-                <div className="text-xs mb-1">Guests</div>
-                <div className="text-sm">{guests}</div>
-              </div>
-              <div>
-                <div className="text-xs mb-1">Status</div>
-                <div className="text-sm text-green-600 font-semibold">Confirmed</div>
-              </div>
-              {totalDays ? (
-                <div className="col-span-2">
-                  <div className="text-xs mb-1">Total Days</div>
-                  <div className="text-sm font-bold text-blue-700 bg-blue-50 border border-blue-100 rounded px-2 py-1 w-fit">{totalDays} days</div>
-                </div>
-              ) : null}
+    <div className="fixed inset-0 bg-black/40 grid place-items-center z-[100] p-4" onClick={onClose}>
+      <div className="bp-card w-full max-w-3xl max-h-[90vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+        <div className="bp-header-blue">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-white/20 grid place-items-center text-2xl backdrop-blur-sm">🏨</div>
+            <div>
+              <div className="text-xl font-bold">Book Hotel</div>
+              <div className="text-xs text-blue-100 font-medium tracking-wide opacity-90">SECURE BOOKING</div>
             </div>
           </div>
+          <button onClick={onClose} className="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg transition-colors text-sm font-medium">Close</button>
         </div>
-        <div className="mt-3 flex gap-2">
-          <button className="btn btn-primary" onClick={() => setShowConf(true)}>Search Hotels</button>
-        </div>
-        {showConf ? (
-          <div className="mt-4">
-            <HotelConfirmation hotel="Sample Hotel" city={city} checkIn={inDate} checkOut={outDate} rooms={rooms} guests={guests} />
+        <div className="p-4 overflow-y-auto custom-scrollbar">
+          
+          {/* Search Parameters Section */}
+          <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm mb-6">
+            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Stay Preferences</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div className="md:col-span-2">
+                <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">Destination City</label>
+                <div className="relative group">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <span className="text-slate-400">📍</span>
+                  </div>
+                  <select 
+                    className="w-full border border-slate-200 rounded-lg py-2.5 pl-10 pr-4 text-slate-700 font-medium focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-slate-50 group-hover:bg-white appearance-none" 
+                    value={city} 
+                    onChange={(e) => setCity(e.target.value)}
+                  >
+                    {cities.map((c) => (<option key={c.name} value={c.name}>{c.name}</option>))}
+                  </select>
+                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-slate-400">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-slate-50 p-3 rounded-lg border border-slate-100 md:col-span-2 grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1.5">Check-in</label>
+                  <input className="w-full border border-slate-200 rounded-lg p-2 text-sm focus:ring-blue-500 focus:border-blue-500" type="date" value={inDate} onChange={(e) => setInDate(e.target.value)} />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1.5">Check-out</label>
+                  <input className="w-full border border-slate-200 rounded-lg p-2 text-sm focus:ring-blue-500 focus:border-blue-500" type="date" value={outDate} onChange={(e) => setOutDate(e.target.value)} />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">Guests</label>
+                <div className="relative">
+                  <input 
+                    className="w-full border border-slate-200 rounded-lg py-2.5 px-3 text-slate-700 font-medium focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" 
+                    type="number" 
+                    min={1} 
+                    value={guests} 
+                    onChange={(e) => setGuests(Number(e.target.value))} 
+                  />
+                  <span className="absolute right-3 top-2.5 text-slate-400 text-sm">pax</span>
+                </div>
+              </div>
+              
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">Rooms</label>
+                <div className="relative">
+                  <input 
+                    className="w-full border border-slate-200 rounded-lg py-2.5 px-3 text-slate-700 font-medium focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" 
+                    type="number" 
+                    min={1} 
+                    value={rooms} 
+                    onChange={(e) => setRooms(Number(e.target.value))} 
+                  />
+                  <span className="absolute right-3 top-2.5 text-slate-400 text-sm">qty</span>
+                </div>
+              </div>
+            </div>
           </div>
-        ) : null}
+
+          {/* Ticket Preview */}
+          <div className="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden relative mb-6 transform transition-all hover:scale-[1.01] duration-300">
+            {/* Decorative top bar */}
+            <div className="h-1.5 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500"></div>
+            
+            <div className="p-6">
+              <div className="flex justify-between items-start mb-6">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="bg-blue-100 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider">Confirmed</span>
+                    <span className="text-slate-400 text-xs">• TripOdin</span>
+                  </div>
+                  <h2 className="text-2xl font-bold text-slate-800 tracking-tight">Hotel Reservation</h2>
+                </div>
+                <div className="text-right bg-blue-50 px-3 py-2 rounded-lg border border-blue-100">
+                  <div className="text-[10px] text-blue-400 uppercase tracking-widest font-bold">Duration</div>
+                  <div className="text-lg font-black text-blue-600 leading-none">{totalDays} <span className="text-sm font-medium text-blue-400">Nights</span></div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-y-6 gap-x-4">
+                <div>
+                  <div className="text-[10px] text-slate-400 uppercase tracking-widest font-bold mb-1">Location</div>
+                  <div className="font-bold text-slate-700 text-lg leading-tight">{city}</div>
+                  <div className="text-xs text-slate-500">{destCountry}</div>
+                </div>
+                <div>
+                  <div className="text-[10px] text-slate-400 uppercase tracking-widest font-bold mb-1">Details</div>
+                  <div className="font-medium text-slate-700">{guests} Guest{guests > 1 ? 's' : ''}</div>
+                  <div className="text-xs text-slate-500">{rooms} Room{rooms > 1 ? 's' : ''}</div>
+                </div>
+                <div>
+                  <div className="text-[10px] text-slate-400 uppercase tracking-widest font-bold mb-1">Check-in</div>
+                  <div className="font-bold text-slate-700">{inDate}</div>
+                  <div className="text-xs text-slate-500">After 14:00</div>
+                </div>
+                <div>
+                  <div className="text-[10px] text-slate-400 uppercase tracking-widest font-bold mb-1">Check-out</div>
+                  <div className="font-bold text-slate-700">{outDate}</div>
+                  <div className="text-xs text-slate-500">Before 11:00</div>
+                </div>
+              </div>
+
+              {/* Dashed line with notches */}
+              <div className="my-6 relative flex items-center">
+                <div className="absolute -left-8 w-6 h-6 bg-slate-50 rounded-full z-10"></div>
+                <div className="w-full border-t-2 border-dashed border-slate-200"></div>
+                <div className="absolute -right-8 w-6 h-6 bg-slate-50 rounded-full z-10"></div>
+              </div>
+
+              <div className="flex justify-between items-center">
+                <div className="flex flex-col">
+                  <span className="text-[10px] text-slate-400 uppercase tracking-widest mb-1">Booking Reference</span>
+                  <span className="font-mono text-slate-600 tracking-widest text-sm">HOTEL-{city.substring(0,3).toUpperCase()}-{Math.floor(Math.random() * 10000)}</span>
+                </div>
+                <svg className="h-10 w-40 text-slate-800 opacity-80" viewBox="0 0 100 30" preserveAspectRatio="none">
+                  <path d="M0,0 h2 v30 h-2 z M4,0 h1 v30 h-1 z M7,0 h3 v30 h-3 z M12,0 h1 v30 h-1 z M15,0 h2 v30 h-2 z M20,0 h3 v30 h-3 z M25,0 h1 v30 h-1 z M30,0 h2 v30 h-2 z M35,0 h1 v30 h-1 z M40,0 h3 v30 h-3 z M45,0 h1 v30 h-1 z M50,0 h2 v30 h-2 z M55,0 h1 v30 h-1 z M60,0 h3 v30 h-3 z M65,0 h2 v30 h-2 z M70,0 h1 v30 h-1 z M75,0 h2 v30 h-2 z M80,0 h3 v30 h-3 z M85,0 h1 v30 h-1 z M90,0 h2 v30 h-2 z M95,0 h1 v30 h-1 z" fill="currentColor" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <button 
+            className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-500/30 transition-all transform active:scale-[0.98] text-lg flex justify-center items-center gap-2"
+            onClick={() => setShowConf(true)}
+          >
+            <span>Find Best Hotels in {city}</span>
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+          </button>
+
+          {showConf ? (
+            <div className="mt-6 animate-in">
+              <HotelConfirmation hotel="Sample Hotel" city={city} checkIn={inDate} checkOut={outDate} rooms={rooms} guests={guests} />
+            </div>
+          ) : null}
         </div>
       </div>
     </div>

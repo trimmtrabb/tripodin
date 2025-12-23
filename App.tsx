@@ -132,7 +132,6 @@ function Chatbot({ onSetDest, onSetOrigin, user, setRoute }: { onSetDest: (c: st
   const [dontNeedVisa, setDontNeedVisa] = useState(false);
   const [dest, setDest] = useState<string>("");
   const [origin, setOrigin] = useState<string>("");
-  const [showFlight, setShowFlight] = useState(false);
   const [showHotel, setShowHotel] = useState(false);
   const [showInsurance, setShowInsurance] = useState(false);
   const [flowStarted, setFlowStarted] = useState(false);
@@ -159,7 +158,7 @@ function Chatbot({ onSetDest, onSetOrigin, user, setRoute }: { onSetDest: (c: st
     setMessages((m) => [...m, { type: "text", text: t }]);
     if (t.toLowerCase() === "i don’t need a visa" || t.toLowerCase() === "i don't need a visa") {
       setMessages((m) => [...m, { type: "text", text: "Visa not required flow." }]);
-      setShowFlight(true);
+      setShowMulti(true);
       setShowHotel(true);
       setShowInsurance(true);
       return;
@@ -293,7 +292,7 @@ function Chatbot({ onSetDest, onSetOrigin, user, setRoute }: { onSetDest: (c: st
               {m.type === "info" ? (<InfoBubble title="Info" text={m.text || ""} />) : null}
               {m.type === "upsell" ? (
                 <UpsellBubble
-                  onFlights={() => setShowFlight(true)}
+                  onFlights={() => setShowMulti(true)}
                   onHotels={() => setShowHotel(true)}
                   onInsurance={() => setShowInsurance(true)}
                   showInsurance={!isVisaFree(origin, dest)}
@@ -307,7 +306,6 @@ function Chatbot({ onSetDest, onSetOrigin, user, setRoute }: { onSetDest: (c: st
       </div>
       ) : null}
 
-      <FlightModal open={showFlight} onClose={() => setShowFlight(false)} originCountry={origin || ""} destCountry={dest || ""} totalStay={totalStay} fullItinerary={itinerary} />
       <HotelModal open={showHotel} onClose={() => setShowHotel(false)} destCountry={dest || ""} totalStay={totalStay} />
       <InsuranceModal open={showInsurance} onClose={() => setShowInsurance(false)} originCountry={origin || ""} destCountry={dest || ""} totalStay={totalStay} />
       <MultiCityModal open={showMulti} onClose={() => setShowMulti(false)} originCountry={origin || ""} destCountry={dest || ""} onSubmit={() => setShowMulti(false)} transportModes={transportModes} fullItinerary={itinerary} tripType={tripType} totalStay={totalStay} />
