@@ -1100,10 +1100,10 @@ export function SelectCitiesBubble({ originCountry, destCountry, onContinue }: {
                               ? (seg.dir === "forward" ? "#eab308" : "#f59e0b")
                               : (seg.dir === "forward" ? "#2563eb" : "#22c55e"))
                         }
-                        strokeWidth={seg.mode === "flight" ? 4 : 6}
-                        strokeLinecap="round"
+                        strokeWidth={seg.mode === "flight" ? 4 : (seg.mode === "train" ? 5 : 6)}
+                        strokeLinecap={seg.mode === "train" ? "butt" : "round"}
                         strokeLinejoin="round"
-                        strokeDasharray={seg.mode === "flight" ? "6 4" : (seg.mode === "train" ? "8 2" : "none")}
+                        strokeDasharray={seg.mode === "flight" ? "6 4" : (seg.mode === "train" ? "3 6" : "none")}
                         filter="url(#routeShadow)"
                       />
                       {/* Transport Icon Background */}
