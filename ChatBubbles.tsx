@@ -50,9 +50,10 @@ export function SelectCitiesBubble({ originCountry, destCountry, onContinue, onU
     if (tab === "multi") {
       setStart(from);
       setFirst(to);
-      setExtra([]);
+      setExtra([""]);
       setFirstDays(3);
-      setExtraDays([]);
+      setExtraDays([3]);
+      setExtraFilter([""]);
       setFinalCity("");
       setReturnStops([]);
       setReturnFilters([]);
@@ -772,7 +773,7 @@ export function SelectCitiesBubble({ originCountry, destCountry, onContinue, onU
           {extra.map((city, idx) => (
             <div
               key={idx}
-              className="group relative flex flex-col md:flex-row items-stretch md:items-center gap-3 p-3 bg-white border border-slate-200 rounded-xl shadow-sm mb-3 transition-all hover:shadow-md hover:border-blue-300"
+              className={`group relative flex flex-col md:flex-row items-stretch md:items-center gap-3 p-3 bg-white border border-slate-200 rounded-xl shadow-sm mb-3 transition-all hover:shadow-md hover:border-blue-300 ${[first, ...extra.filter((_, i) => i !== idx)].includes(city) ? "ring-1 ring-amber-300 bg-amber-50/30" : ""}`}
               draggable
               onDragStart={() => setDragIndex(idx)}
               onDragOver={(ev) => ev.preventDefault()}
@@ -821,11 +822,20 @@ export function SelectCitiesBubble({ originCountry, destCountry, onContinue, onU
                         </div>
                     </div>
                     {city && !editingExtras[idx] ? (
-                      <div className="flex items-center gap-2 group/edit cursor-pointer" onClick={() => setEditingExtras((prev) => ({ ...prev, [idx]: true }))} title="Click to edit city">
-                         <span className="font-bold text-slate-700 text-lg truncate">{city}</span>
-                         <span className="text-slate-300 group-hover/edit:text-blue-500 transition-colors text-xs">✎</span>
+                      <div className="flex flex-col">
+                        <div className="flex items-center gap-2 group/edit cursor-pointer" onClick={() => setEditingExtras((prev) => ({ ...prev, [idx]: true }))} title="Click to edit city">
+                           <span className="font-bold text-slate-700 text-lg truncate">{city}</span>
+                           <span className="text-slate-300 group-hover/edit:text-blue-500 transition-colors text-xs">✎</span>
+                        </div>
+                        {[first, ...extra.filter((_, i) => i !== idx)].includes(city) && (
+                          <div className="text-[10px] text-amber-600 font-medium flex items-center gap-1 mt-0.5 animate-in fade-in slide-in-from-top-1">
+                            <span className="w-1 h-1 rounded-full bg-amber-500"></span>
+                            Already selected
+                          </div>
+                        )}
                       </div>
                     ) : (
+                      <>
                       <input
                         autoFocus={!!editingExtras[idx]}
                         className="w-full bg-slate-50 border-none rounded p-1 text-lg font-bold text-slate-700 focus:ring-0 placeholder:font-normal"
@@ -895,6 +905,13 @@ export function SelectCitiesBubble({ originCountry, destCountry, onContinue, onU
                         }}
                         title="Search and select your next city"
                       />
+                      {[first, ...extra.filter((_, i) => i !== idx)].some(c => c.toLowerCase() === (extraFilter[idx] || city || "").toLowerCase()) && (
+                          <div className="text-[10px] text-amber-600 font-medium flex items-center gap-1 mt-1 animate-in fade-in slide-in-from-top-1">
+                            <span>⚠️</span>
+                            <span>City already in itinerary</span>
+                          </div>
+                      )}
+                      </>
                     )}
                     <datalist id={`city-suggest-${idx}`}>
                       {destCities.map((c) => (
