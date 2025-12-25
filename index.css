@@ -31,9 +31,9 @@ body { @apply bg-slate-50 text-slate-900; }
 .animate-in { animation: fadeInUp .25s ease both; }
 
 .bp-card { @apply overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm; }
-.bp-header-blue { @apply bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-3 flex items-center justify-between; }
-.bp-header-purple { @apply bg-gradient-to-r from-purple-500 to-purple-600 text-white px-4 py-3 flex items-center justify-between; }
-.bp-header-green { @apply bg-gradient-to-r from-green-500 to-green-600 text-white px-4 py-3 flex items-center justify-between; }
+.bp-header-blue { @apply bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0; }
+.bp-header-purple { @apply bg-gradient-to-r from-purple-500 to-purple-600 text-white px-4 py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0; }
+.bp-header-green { @apply bg-gradient-to-r from-green-500 to-green-600 text-white px-4 py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0; }
 .bp-code { @apply font-mono tracking-wider text-lg; }
 .bp-grid { @apply p-4 grid md:grid-cols-2 gap-3; }
 

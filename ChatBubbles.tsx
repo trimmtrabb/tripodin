@@ -1,5 +1,15 @@
 import React, { useMemo, useState, useRef, useEffect } from "react";
-import { getCities, distanceKm } from "./cityData";
+import { getCities, distanceKm, DATA } from "./cityData";
+
+function getAirportCode(cityName: string): string {
+  for (const country of Object.values(DATA)) {
+    const city = country.find(c => c.name === cityName);
+    if (city?.airport?.code) {
+      return city.airport.code;
+    }
+  }
+  return cityName.substring(0, 3).toUpperCase();
+}
 import { isSameZone } from "./visaEngine";
 
 export function NoVisaBubble() {
@@ -18,7 +28,8 @@ export function NoVisaBubble() {
   );
 }
 
-export function SelectCitiesBubble({ originCountry, destCountry, onContinue, onUpdate }: { originCountry: string; destCountry: string; onContinue: (from: string, to: string, days: number, itinerary: string[], transportModes: Record<number, "flight" | "train" | "car">, tripType: "oneway" | "round" | "multicity", stays: Record<string, number>) => void; onUpdate?: (from: string, to: string, days: number, itinerary: string[], transportModes: Record<number, "flight" | "train" | "car">, tripType: "oneway" | "round" | "multicity", stays: Record<string, number>) => void }) {
+
+export function SelectCitiesBubble({ originCountry, destCountry, onContinue, onUpdate }: { originCountry: string; destCountry: string; onContinue: (from: string, to: string, days: number, itinerary: string[], transportModes: Record<number, "flight" | "train" | "car" | "surface">, tripType: "oneway" | "round" | "multicity", stays: Record<string, number>) => void; onUpdate?: (from: string, to: string, days: number, itinerary: string[], transportModes: Record<number, "flight" | "train" | "car" | "surface">, tripType: "oneway" | "round" | "multicity", stays: Record<string, number>) => void }) {
   const originCities = useMemo(() => getCities(originCountry), [originCountry]);
   const destCities = useMemo(() => getCities(destCountry), [destCountry]);
   const [tab, setTab] = useState<"direct" | "multi">("direct");
@@ -33,7 +44,7 @@ export function SelectCitiesBubble({ originCountry, destCountry, onContinue, onU
   const [finalCity, setFinalCity] = useState<string>("");
   const [returnStops, setReturnStops] = useState<string[]>([]);
   const [returnFilters, setReturnFilters] = useState<string[]>([]);
-  const [planReturn, setPlanReturn] = useState<boolean>(false);
+  const [planReturn, setPlanReturn] = useState<boolean>(true);
   const maxCities = 5;
   React.useEffect(() => {
     if (tab === "multi") {
@@ -45,7 +56,7 @@ export function SelectCitiesBubble({ originCountry, destCountry, onContinue, onU
       setFinalCity("");
       setReturnStops([]);
       setReturnFilters([]);
-      setPlanReturn(false);
+      setPlanReturn(true);
     }
   }, [tab, from, to]);
   const [extraFilter, setExtraFilter] = useState<string[]>([]);
@@ -53,6 +64,26 @@ export function SelectCitiesBubble({ originCountry, destCountry, onContinue, onU
   const [editingReturns, setEditingReturns] = useState<{[key: number]: boolean}>({});
   const [transportModes, setTransportModes] = useState<{[key: number]: "flight" | "train" | "car"}>({});
   const [mapError, setMapError] = useState<boolean>(false);
+
+  const moveCity = (fromIdx: number, toIdx: number) => {
+    if (toIdx < 0 || toIdx >= extra.length) return;
+    const arr = extra.slice();
+    const [m] = arr.splice(fromIdx, 1);
+    arr.splice(toIdx, 0, m);
+    setExtra(arr);
+
+    const d = extraDays.slice();
+    const [md] = d.splice(fromIdx, 1);
+    d.splice(toIdx, 0, md);
+    setExtraDays(d);
+
+    const f = extraFilter.slice();
+    const [mf] = f.splice(fromIdx, 1);
+    f.splice(toIdx, 0, mf);
+    setExtraFilter(f);
+    
+    setEditingExtras({});
+  };
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const label = from && to ? `Continue with ${from} → ${to}` : "Continue";
@@ -88,32 +119,7 @@ export function SelectCitiesBubble({ originCountry, destCountry, onContinue, onU
     return "flight";
   }, [transportModes, originCities, destCities, originCountry, destCountry, find]);
 
-  // Real-time update hook
-  React.useEffect(() => {
-     if (!onUpdate) return;
-     const points = names.map(n => find(n)).filter(Boolean) as any[]; 
-     if (points.length < 2) return;
-
-     const totalDays = firstDays + extraDays.reduce((s, d) => s + (d || 0), 0);
-     const itinerary = points.map((p) => p.name);
-     const finalModes: { [key: number]: "flight" | "train" | "car" } = {};
-     for (let i = 0; i < points.length - 1; i++) {
-        if (transportModes[i]) {
-            finalModes[i] = transportModes[i];
-        } else {
-            const p = points[i]; const q = points[i+1];
-            finalModes[i] = getMode(i, p.name, q.name);
-        }
-     }
-     const stays: Record<string, number> = {};
-     if (first) stays[first] = firstDays;
-     extra.forEach((e, i) => {
-        if (e) stays[e] = extraDays[i] || 0;
-     });
-     
-     onUpdate(start, first, totalDays, itinerary, finalModes, extra.length > 0 ? "multicity" : (planReturn ? "round" : "oneway"), stays);
-
-  }, [firstDays, extraDays, first, extra, start, planReturn, transportModes, onUpdate, getMode, names, find]);
+  // Real-time update hook moved below points definition
   React.useEffect(() => {
     setTransportModes((prev) => {
       const next = { ...prev };
@@ -151,6 +157,14 @@ export function SelectCitiesBubble({ originCountry, destCountry, onContinue, onU
     });
     pairsRef.current = currPairs;
   }, [names, finalCity, returnStops, planReturn, start]);
+
+  React.useEffect(() => {
+    // Ensure Return is enabled by default when only 1 city is present (Standard Round Trip)
+    if (extra.length === 0 && !planReturn) {
+      setPlanReturn(true);
+    }
+  }, [extra.length, planReturn]);
+
   const distKm = React.useMemo(() => {
     const fIdx = finalCity ? names.findIndex((n) => n === finalCity) : -1;
     // Don't truncate forward path based on finalCity - allow the full route to be traversed
@@ -275,10 +289,12 @@ export function SelectCitiesBubble({ originCountry, destCountry, onContinue, onU
   }, [countryBounds]);
   const points = React.useMemo(() => {
     const seq = [...names];
-    if (planReturn && finalCity) {
+    if (planReturn) {
       const lastForward = seq[seq.length - 1];
-      if (finalCity !== lastForward) {
-        seq.push(finalCity);
+      const returnStart = finalCity || lastForward;
+      
+      if (returnStart !== lastForward) {
+        seq.push(returnStart);
       }
       if (returnStops.length) {
         seq.push(...returnStops);
@@ -314,6 +330,42 @@ export function SelectCitiesBubble({ originCountry, destCountry, onContinue, onU
     });
   }, [names, originCities, destCities, countryBounds, planReturn, finalCity, returnStops, start]);
 
+  // Real-time update hook
+  React.useEffect(() => {
+     if (!onUpdate) return;
+     // Use memoized points instead of recalculating from names only
+     if (points.length < 2) return;
+
+     const totalDays = firstDays + extraDays.reduce((s, d) => s + (d || 0), 0);
+     const itinerary = points.map((p) => p.name);
+     const finalModes: { [key: number]: "flight" | "train" | "car" | "surface" } = {};
+     
+     // Detect gap index for surface sector (open-jaw)
+     const lastForwardName = names[names.length - 1];
+     const gapIndex = (planReturn && finalCity && names.length > 0 && finalCity !== lastForwardName) 
+                      ? names.length - 1 
+                      : -1;
+
+     for (let i = 0; i < points.length - 1; i++) {
+        if (i === gapIndex) {
+            finalModes[i] = "surface";
+        } else if (transportModes[i]) {
+            finalModes[i] = transportModes[i];
+        } else {
+            const p = points[i]; const q = points[i+1];
+            finalModes[i] = getMode(i, p.name, q.name);
+        }
+     }
+     const stays: Record<string, number> = {};
+     if (first) stays[first] = firstDays;
+     extra.forEach((e, i) => {
+        if (e) stays[e] = extraDays[i] || 0;
+     });
+     
+     onUpdate(start, first, totalDays, itinerary, finalModes, extra.length > 0 ? "multicity" : (planReturn ? "round" : "oneway"), stays);
+
+  }, [firstDays, extraDays, first, extra, start, planReturn, transportModes, onUpdate, getMode, names, find, points, finalCity]);
+
   const hasFlights = React.useMemo(() => {
     if (points.length < 2) return false;
     for (let i = 0; i < points.length - 1; i++) {
@@ -327,50 +379,118 @@ export function SelectCitiesBubble({ originCountry, destCountry, onContinue, onU
   const routeSegments = React.useMemo(() => {
      if (points.length < 2) return [];
      
-     const segs: { d: string; mode: "flight" | "train" | "car"; mx: number; my: number; angle: number; dir: "forward" | "return" }[] = [];
-    const forwardCount = Math.max(0, names.length - 1);
-    for (let i = 0; i < points.length - 1; i++) {
-      const p = points[i];
-      const q = points[i + 1];
-      const mode = getMode(i, p.name, q.name);
-      const dir: "forward" | "return" = i < forwardCount ? "forward" : "return";
+     // Helper to calculate position and angle at t
+     const getPosAndAngle = (p: any, q: any, cx: number, cy: number, offset: number, t: number) => {
+        let x, y, angle;
+        if (offset === 0) {
+           // Linear
+           x = p.x + (q.x - p.x) * t;
+           y = p.y + (q.y - p.y) * t;
+           angle = Math.atan2(q.y - p.y, q.x - p.x) * 180 / Math.PI;
+        } else {
+           // Quadratic Bezier
+           // B(t) = (1-t)^2 P0 + 2(1-t)t P1 + t^2 P2
+           const mt = 1 - t;
+           x = mt * mt * p.x + 2 * mt * t * cx + t * t * q.x;
+           y = mt * mt * p.y + 2 * mt * t * cy + t * t * q.y;
+           
+           // Derivative for angle
+           // B'(t) = 2(1-t)(P1-P0) + 2t(P2-P1)
+           const tx = 2 * mt * (cx - p.x) + 2 * t * (q.x - cx);
+           const ty = 2 * mt * (cy - p.y) + 2 * t * (q.y - cy);
+           angle = Math.atan2(ty, tx) * 180 / Math.PI;
+        }
+        return { x, y, angle };
+     };
 
-      const mx = (p.x + q.x) / 2;
-       const my = (p.y + q.y) / 2;
-       const dx = q.x - p.x;
-       const dy = q.y - p.y;
-       const dist = Math.sqrt(dx * dx + dy * dy);
+     const rawSegs: any[] = [];
+     const forwardCount = Math.max(0, names.length - 1);
+     const segmentPairs = new Map<string, number>();
+
+     for (let i = 0; i < points.length - 1; i++) {
+        const p = points[i];
+        const q = points[i + 1];
+        const mode = getMode(i, p.name, q.name);
+        const dir: "forward" | "return" = i < forwardCount ? "forward" : "return";
+        
+        // Unique key for this city pair (order-independent for checking existence, dependent for offset count)
+        const pairKey = [p.name, q.name].sort().join('-');
+        const pairCount = segmentPairs.get(pairKey) || 0;
+        segmentPairs.set(pairKey, pairCount + 1);
+
+        // Check if there is a reverse segment (to avoid overlap)
+        const hasReverse = points.some((pt, k) => {
+           if (k === points.length - 1) return false;
+           const next = points[k + 1];
+           return pt.name === q.name && next.name === p.name;
+        });
+
+        const mx = (p.x + q.x) / 2;
+        const my = (p.y + q.y) / 2;
+        const dx = q.x - p.x;
+        const dy = q.y - p.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
        
-       // Flight gets more arc, ground/train gets less
-       const offset = mode === "flight" ? Math.max(20, dist * 0.15) : 0; 
+        // Base offset logic
+        let offsetBase = mode === "flight" ? Math.max(20, dist * 0.15) : 0; 
+        
+        // If we have multiple segments between same cities, increase curvature to separate them
+        // Or if reverse exists, ensure separation
+        if (hasReverse && offsetBase === 0) offsetBase = Math.max(15, dist * 0.1);
+        
+        // Apply extra offset if this is the 2nd, 3rd time we see this pair
+        // This handles A->B and A->B cases (rare but possible)
+        const offset = offsetBase + (pairCount * 15); 
        
-       const nx = -dy / dist;
-       const ny = dx / dist;
-       const cx = mx + nx * offset;
-       const cy = my + ny * offset;
+        const nx = -dy / dist;
+        const ny = dx / dist;
+        const cx = mx + nx * offset;
+        const cy = my + ny * offset;
        
-       const d = offset === 0 
-         ? `M ${p.x} ${p.y} L ${q.x} ${q.y}` 
-         : `M ${p.x} ${p.y} Q ${cx} ${cy} ${q.x} ${q.y}`;
-       
-       // Icon position
-       let x, y, angle;
-       if (offset === 0) {
-         x = mx;
-         y = my;
-         angle = Math.atan2(dy, dx) * 180 / Math.PI;
-       } else {
-         const t = 0.5;
-         x = (1 - t) * (1 - t) * p.x + 2 * (1 - t) * t * cx + t * t * q.x;
-         y = (1 - t) * (1 - t) * p.y + 2 * (1 - t) * t * cy + t * t * q.y;
-         const tx = 2 * (1 - t) * (cx - p.x) + 2 * t * (q.x - cx);
-         const ty = 2 * (1 - t) * (cy - p.y) + 2 * t * (q.y - cy);
-         angle = Math.atan2(ty, tx) * 180 / Math.PI;
-       }
- 
-       segs.push({ d, mode, mx: x, my: y, angle, dir });
+        const d = offset === 0 
+           ? `M ${p.x} ${p.y} L ${q.x} ${q.y}` 
+           : `M ${p.x} ${p.y} Q ${cx} ${cy} ${q.x} ${q.y}`;
+        
+        rawSegs.push({ d, mode, dir, p, q, cx, cy, offset, t: 0.5, id: i });
      }
-     return segs;
+
+     // Collision Resolution for Icons
+     // Iteratively adjust 't' to maximize distance between icons
+     const iterations = 5;
+     const minIconDist = 28; // Minimum distance between centers (px)
+     
+     for (let iter = 0; iter < iterations; iter++) {
+         let changed = false;
+         for (let i = 0; i < rawSegs.length; i++) {
+             for (let j = i + 1; j < rawSegs.length; j++) {
+                 const s1 = rawSegs[i];
+                 const s2 = rawSegs[j];
+                 
+                 const pos1 = getPosAndAngle(s1.p, s1.q, s1.cx, s1.cy, s1.offset, s1.t);
+                 const pos2 = getPosAndAngle(s2.p, s2.q, s2.cx, s2.cy, s2.offset, s2.t);
+                 
+                 const distSq = (pos1.x - pos2.x) ** 2 + (pos1.y - pos2.y) ** 2;
+                 if (distSq < minIconDist * minIconDist) {
+                     // Push apart
+                     const moveAmount = 0.08;
+                     if (s1.t < s2.t) {
+                         s1.t = Math.max(0.2, s1.t - moveAmount);
+                         s2.t = Math.min(0.8, s2.t + moveAmount);
+                     } else {
+                         s1.t = Math.min(0.8, s1.t + moveAmount);
+                         s2.t = Math.max(0.2, s2.t - moveAmount);
+                     }
+                     changed = true;
+                 }
+             }
+         }
+         if (!changed) break;
+     }
+
+     return rawSegs.map(s => {
+         const { x, y, angle } = getPosAndAngle(s.p, s.q, s.cx, s.cy, s.offset, s.t);
+         return { d: s.d, mode: s.mode, mx: x, my: y, angle, dir: s.dir };
+     });
    }, [points, transportModes, names]);
   // returnD and returnSegs removed as routeSegments now covers full path
 
@@ -451,12 +571,15 @@ export function SelectCitiesBubble({ originCountry, destCountry, onContinue, onU
             title="Travel by Flight"
           >✈️</button>
           <button
-            className={`p-1 rounded text-xs ${mode === "train" ? "bg-white shadow text-amber-600" : "text-slate-400 hover:text-slate-600"}`}
+            className={`p-1 rounded text-xs ${mode === "train" ? "bg-white shadow text-amber-600" : "text-slate-400 hover:text-slate-600"} relative`}
             onClick={() => setTransportModes((prev) => ({ ...prev, [idx]: "train" }))}
-            title="Travel by Train"
-          >🚆</button>
+            title={isCarRec ? "Recommended: Convenient & Visa-free" : "Travel by Train"}
+          >
+            🚆
+            {isCarRec && mode !== "train" && <span className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full animate-pulse" />}
+          </button>
           <button
-            className={`p-1 rounded text-xs ${mode === "car" ? "bg-white shadow text-blue-800" : "text-slate-400 hover:text-slate-600"}`}
+            className={`p-1 rounded text-xs ${mode === "car" ? "bg-white shadow text-blue-800" : "text-slate-400 hover:text-slate-600"} relative`}
             onClick={() => setTransportModes((prev) => ({ ...prev, [idx]: "car" }))}
             title={isCarRec ? "Recommended: Convenient & Visa-free" : "Travel by Car"}
           >
@@ -597,8 +720,11 @@ export function SelectCitiesBubble({ originCountry, destCountry, onContinue, onU
                       className="w-16 border rounded p-1 text-center text-sm font-semibold" 
                       type="number" 
                       min={1} 
-                      value={firstDays} 
-                      onChange={(e) => setFirstDays(Number(e.target.value))} 
+                      value={firstDays || ""} 
+                      onChange={(e) => {
+                        const v = e.target.value.replace(/^0+/, "");
+                        setFirstDays(v ? parseInt(v, 10) : 0);
+                      }} 
                    />
                    <span className="text-xs text-slate-400 ml-1">days</span>
                 </div>
@@ -646,7 +772,7 @@ export function SelectCitiesBubble({ originCountry, destCountry, onContinue, onU
           {extra.map((city, idx) => (
             <div
               key={idx}
-              className="group relative flex items-center gap-3 p-3 bg-white border border-slate-200 rounded-xl shadow-sm mb-3 transition-all hover:shadow-md hover:border-blue-300"
+              className="group relative flex flex-col md:flex-row items-stretch md:items-center gap-3 p-3 bg-white border border-slate-200 rounded-xl shadow-sm mb-3 transition-all hover:shadow-md hover:border-blue-300"
               draggable
               onDragStart={() => setDragIndex(idx)}
               onDragOver={(ev) => ev.preventDefault()}
@@ -667,13 +793,33 @@ export function SelectCitiesBubble({ originCountry, destCountry, onContinue, onU
                 setDragIndex(null);
               }}
             >
-              <button className="text-slate-400 hover:text-blue-500 cursor-grab active:cursor-grabbing p-1" title="Drag to reorder" aria-label="Drag to reorder">
+              <button className="hidden md:block text-slate-400 hover:text-blue-500 cursor-grab active:cursor-grabbing p-1" title="Drag to reorder" aria-label="Drag to reorder">
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M4 3.5a1 1 0 1 1 2 0 1 1 0 0 1-2 0zm0 4.5a1 1 0 1 1 2 0 1 1 0 0 1-2 0zm0 4.5a1 1 0 1 1 2 0 1 1 0 0 1-2 0zm8-9a1 1 0 1 1 2 0 1 1 0 0 1-2 0zm0 4.5a1 1 0 1 1 2 0 1 1 0 0 1-2 0zm0 4.5a1 1 0 1 1 2 0 1 1 0 0 1-2 0z"/></svg>
               </button>
 
               <div className="flex-1 min-w-0">
                  <div className="flex flex-col">
-                    <span className="text-[10px] font-bold uppercase text-slate-400 tracking-wider mb-0.5">City {idx + 3}</span>
+                    <div className="flex justify-between items-center md:block">
+                        <span className="text-[10px] font-bold uppercase text-slate-400 tracking-wider mb-0.5">City {idx + 3}</span>
+                        <div className="md:hidden flex flex-col gap-1 mr-1">
+                            <button 
+                                className="p-1 text-slate-400 hover:text-blue-500 disabled:opacity-20 transition-colors" 
+                                disabled={idx === 0}
+                                onClick={() => moveCity(idx, idx - 1)}
+                                title="Move Up"
+                            >
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M18 15l-6-6-6 6"/></svg>
+                            </button>
+                            <button 
+                                className="p-1 text-slate-400 hover:text-blue-500 disabled:opacity-20 transition-colors" 
+                                disabled={idx === extra.length - 1}
+                                onClick={() => moveCity(idx, idx + 1)}
+                                title="Move Down"
+                            >
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+                            </button>
+                        </div>
+                    </div>
                     {city && !editingExtras[idx] ? (
                       <div className="flex items-center gap-2 group/edit cursor-pointer" onClick={() => setEditingExtras((prev) => ({ ...prev, [idx]: true }))} title="Click to edit city">
                          <span className="font-bold text-slate-700 text-lg truncate">{city}</span>
@@ -758,7 +904,7 @@ export function SelectCitiesBubble({ originCountry, destCountry, onContinue, onU
                  </div>
               </div>
 
-              <div className="w-[280px] shrink-0 flex items-center justify-between gap-2 bg-slate-50 rounded-lg p-2 border border-slate-100">
+              <div className="w-full md:w-[280px] shrink-0 flex items-center justify-between gap-2 bg-slate-50 rounded-lg p-2 border border-slate-100">
                   <div className="flex flex-col items-center flex-1 min-w-0">
                       <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Travel</span>
                       <TransportSelector idx={idx + 1} from={idx === 0 ? first : extra[idx - 1]} to={city} />
@@ -773,10 +919,11 @@ export function SelectCitiesBubble({ originCountry, destCountry, onContinue, onU
                             className="w-12 bg-white border border-slate-200 rounded p-1 text-center text-sm font-bold text-slate-700 outline-none focus:ring-1 focus:ring-blue-500"
                             type="number"
                             min={1}
-                            value={extraDays[idx] ?? 3}
+                            value={(extraDays[idx] ?? 3) || ""}
                             onChange={(e) => setExtraDays((arr) => {
                               const next = arr.slice();
-                              next[idx] = Number(e.target.value);
+                              const v = e.target.value.replace(/^0+/, "");
+                              next[idx] = v ? parseInt(v, 10) : 0;
                               return next;
                             })}
                             title="Stay days"
@@ -786,8 +933,8 @@ export function SelectCitiesBubble({ originCountry, destCountry, onContinue, onU
                   </div>
               </div>
 
-              <div className="flex items-center gap-2">
-                 <div className="w-[120px] flex justify-end">
+              <div className="flex items-center gap-2 self-end md:self-auto">
+                 <div className="w-full md:w-[120px] flex justify-end">
                    {finalCity && finalCity === (city || "") ? (
                       <span className="px-3 py-1.5 bg-blue-100 text-blue-700 text-xs font-bold rounded-lg border border-blue-200 shadow-sm cursor-default whitespace-nowrap">
                           Final Return ↩
@@ -836,7 +983,7 @@ export function SelectCitiesBubble({ originCountry, destCountry, onContinue, onU
             return (
               <div
                 key={`ret-${idx}`}
-                className="group relative flex items-center gap-3 p-3 bg-white border border-slate-200 rounded-xl shadow-sm mb-3 transition-all hover:shadow-md hover:border-blue-300"
+                className="group relative flex flex-col md:flex-row items-stretch md:items-center gap-3 p-3 bg-white border border-slate-200 rounded-xl shadow-sm mb-3 transition-all hover:shadow-md hover:border-blue-300"
               >
                 <div className="flex-1 min-w-0">
                   <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Return Stop {idx + 1}</div>
@@ -921,15 +1068,15 @@ export function SelectCitiesBubble({ originCountry, destCountry, onContinue, onU
                   )}
                 </div>
 
-                <div className="w-[280px] shrink-0 flex items-center justify-center bg-slate-50 rounded-lg p-2 border border-slate-100">
+                <div className="w-full md:w-[280px] shrink-0 flex items-center justify-center bg-slate-50 rounded-lg p-2 border border-slate-100">
                   <div className="flex flex-col items-center">
                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Travel</span>
                     <TransportSelector idx={transportIdx} from={idx === 0 ? finalCity : returnStops[idx - 1]} to={city} />
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <div className="w-[120px]"></div>
+                <div className="flex items-center gap-2 self-end md:self-auto">
+                  <div className="hidden md:block w-[120px]"></div>
                   <button
                     className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                     title="Remove stop"
@@ -974,26 +1121,37 @@ export function SelectCitiesBubble({ originCountry, destCountry, onContinue, onU
                 
                 return (
                   <span key={`${p.name}-${q.name}-${i}`} className="route-chip">
-                    {icon} {p.name} → {q.name} · {km.toFixed(1)} km
+                    {icon} {p.name} → {q.name} · {km.toFixed(0)} km
                   </span>
                 );
               })}
             </div>
             <div className="mt-3">
               <div className="meter"><div className="meter-fill" style={{ width: `${Math.min(100, (distKm / 3000) * 100)}%`, background: "linear-gradient(to right, #22c55e, #3b82f6)" }} /></div>
-              <div className="text-sm mt-1">Total ground route: {distKm.toFixed(1)} km ({feet.toLocaleString()} ft)</div>
+              <div className="text-sm mt-1">Total ground route: {distKm.toFixed(0)} km ({feet.toLocaleString()} ft)</div>
               <div className="text-sm text-slate-600">Total stay: {firstDays + extraDays.reduce((s, d) => s + (d || 0), 0)} days</div>
               {planReturn && finalCity ? (
-                <div className="text-sm text-slate-700 mt-1">
-                  {(() => {
-                    const forwardArr = [start, first, ...extra].filter(Boolean);
-                    const idx = forwardArr.findIndex((n) => n === finalCity);
-                    const forward = idx >= 0 ? forwardArr.slice(0, idx + 1) : forwardArr;
-                    const back = returnStops.length ? [...returnStops, finalCity, start] : [start];
-                    const deduced = [...forward, ...back];
-                    const compressed = deduced.filter((n, i, arr) => i === 0 || n !== arr[i - 1]);
-                    return <>Deduced itinerary: {compressed.join(" → ")}</>;
-                  })()}
+                <div className="text-sm text-slate-700 mt-1 font-medium">
+                  Deduced itinerary:{" "}
+                  {points.map((p, i) => {
+                    if (i === points.length - 1) return <span key={i}>{p.name}</span>;
+                    const q = points[i + 1];
+                    const mode = getMode(i, p.name, q.name);
+                    const lastForward = names[names.length - 1];
+                    // The gap occurs if we switch from the last forward city to a different return city
+                    const isGap = finalCity !== lastForward && i === names.length - 1;
+                    
+                    const symbol = isGap ? "//" : (mode === "flight" ? "✈" : (mode === "train" ? "🚆" : "🚗"));
+                    
+                    return (
+                      <React.Fragment key={i}>
+                        <span>{p.name}</span>
+                        <span className={`mx-1.5 ${isGap ? "text-slate-400 font-bold tracking-tighter text-xs" : "text-blue-500 text-xs"}`} title={isGap ? "Surface / Open-jaw Gap" : "Travel segment"}>
+                          {symbol}
+                        </span>
+                      </React.Fragment>
+                    );
+                  })}
                 </div>
               ) : null}
               {/* Unified Return Trip Planning UI */}
@@ -1439,10 +1597,13 @@ export function SelectCitiesBubble({ originCountry, destCountry, onContinue, onU
                                 <label className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-0.5 block">Days</label>
                                 <input 
                                     type="number" 
-                                    min={0} 
+                                    min={1} 
                                     className="w-full border border-slate-200 rounded px-2 py-1 text-sm font-medium focus:ring-2 focus:ring-blue-500 outline-none"
-                                    value={firstDays}
-                                    onChange={(e) => setFirstDays(Math.max(0, parseInt(e.target.value) || 0))}
+                                    value={firstDays || ""}
+                                    onChange={(e) => {
+                                        const v = e.target.value.replace(/^0+/, "");
+                                        setFirstDays(v ? parseInt(v, 10) : 0);
+                                    }}
                                 />
                             </div>
                         </div>
@@ -1458,11 +1619,12 @@ export function SelectCitiesBubble({ originCountry, destCountry, onContinue, onU
                                     <label className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-0.5 block">Days</label>
                                     <input 
                                         type="number" 
-                                        min={0} 
+                                        min={1} 
                                         className="w-full border border-slate-200 rounded px-2 py-1 text-sm font-medium focus:ring-2 focus:ring-blue-500 outline-none"
-                                        value={extraDays[idx] ?? 3}
+                                        value={(extraDays[idx] ?? 3) || ""}
                                         onChange={(e) => {
-                                            const val = Math.max(0, parseInt(e.target.value) || 0);
+                                            const v = e.target.value.replace(/^0+/, "");
+                                            const val = v ? parseInt(v, 10) : 0;
                                             setExtraDays(prev => {
                                                 const next = [...prev];
                                                 next[idx] = val;
@@ -1500,11 +1662,11 @@ export function SelectCitiesBubble({ originCountry, destCountry, onContinue, onU
             ) : null}
           </div>
         </div>
-        <div className="shrink-0 p-3 border-t bg-white z-10">
-          <button className="btn btn-primary btn-lg w-full" disabled={!hasFlights} title={!hasFlights ? "No flights in itinerary" : ""} onClick={() => {
+        <div className="shrink-0 p-3 border-t bg-white z-20 relative shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
+          <button className="btn btn-primary btn-lg w-full cursor-pointer touch-manipulation active:scale-[0.98] transition-transform" disabled={!hasFlights} title={!hasFlights ? "No flights in itinerary" : ""} onClick={() => {
             const totalDays = firstDays + extraDays.reduce((s, d) => s + (d || 0), 0);
             const itinerary = points.map((p) => p.name);
-            const finalModes: { [key: number]: "flight" | "train" | "car" } = {};
+            const finalModes: { [key: number]: "flight" | "train" | "car" | "surface" } = {};
             for (let i = 0; i < points.length - 1; i++) {
               if (transportModes[i]) {
                 finalModes[i] = transportModes[i];
@@ -1521,9 +1683,17 @@ export function SelectCitiesBubble({ originCountry, destCountry, onContinue, onU
             onContinue(start, first, totalDays, itinerary, finalModes, extra.length > 0 ? "multicity" : (planReturn ? "round" : "oneway"), stays);
           }}>
             {planReturn ? (
-              <>Plan Round Trip with {start} ⇄ {first}</>
+              (extra.length > 0 || (finalCity && finalCity !== first)) ? (
+                <>Plan {extra.length > 0 ? "Multi-City" : "Open-Jaw"} Trip</>
+              ) : (
+                <>Plan Round Trip with {start} ⇄ {first}</>
+              )
             ) : (
-              <>Plan One-way with {start} → {first}</>
+              extra.length > 0 ? (
+                <>Plan Multi-City Trip</>
+              ) : (
+                <>Plan One-way with {start} → {first}</>
+              )
             )}
           </button>
         </div>
@@ -1562,6 +1732,238 @@ export function InfoBubble({ title, text }: { title: string; text: string }) {
     <div className="bubble bubble-blue p-4 animate-in">
       <div className="font-semibold mb-1">{title}</div>
       <div className="text-sm text-slate-700">{text}</div>
+    </div>
+  );
+}
+
+export function BoardingPassBubble({ from, to, date, pax, price, tripType, itinerary }: { from: string; to: string; date: string; pax: number; price: string; tripType?: string; itinerary?: string[] }) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setTimeout(() => {
+        if (ref.current) {
+            ref.current.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+    }, 100);
+  }, []);
+
+  // Detect if this is an open-jaw/split trip
+  // A simple heuristic: if we have > 2 cities and it's a round trip/multicity or open-jaw
+  const isSplit = (tripType === "multicity" || tripType === "round" || tripType === "openjaw") && itinerary && itinerary.length >= 3;
+
+  if (isSplit && itinerary) {
+    // Try to find the two main legs for the split view
+    // Leg 1: Start -> First Destination
+    // Leg 2: Last Stop -> Start (Return)
+    const leg1From = itinerary[0];
+    const leg1To = itinerary[1]; // Simplified: Assume first leg is A->B
+    
+    // For return leg, we look at the last segment
+    const lastIdx = itinerary.length - 1;
+    const leg2From = itinerary[lastIdx - 1];
+    const leg2To = itinerary[lastIdx];
+
+    // Check if it's truly open jaw (Dest != ReturnStart)
+    const isOpenJaw = leg1To !== leg2From;
+
+    if (isOpenJaw || itinerary.length > 3) {
+        return (
+            <div ref={ref} className="p-0 animate-in max-w-2xl mx-auto w-full my-4">
+                <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-200 transform transition-all hover:scale-[1.01]">
+                    {/* Header */}
+                    <div className="bg-gradient-to-r from-blue-700 to-indigo-800 p-4 text-white flex justify-between items-center relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-20 -mt-20 blur-3xl pointer-events-none"></div>
+                        <div className="flex items-center gap-3 relative z-10">
+                            <div className="bg-white/20 p-2 rounded-lg backdrop-blur-md">
+                                <span className="text-xl">✈️</span>
+                            </div>
+                            <div>
+                                <div className="font-bold tracking-wide text-sm">FLIGHT ITINERARY</div>
+                                <div className="text-[10px] text-blue-200 opacity-80 tracking-wider">TRIPODIN CONFIRMED • {tripType === "multicity" ? "MULTI-CITY" : "OPEN-JAW"}</div>
+                            </div>
+                        </div>
+                        <div className="text-xs font-mono bg-green-500/20 text-green-100 px-3 py-1.5 rounded-full backdrop-blur-sm border border-green-400/30 flex items-center gap-1.5">
+                            <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></span>
+                            CONFIRMED
+                        </div>
+                    </div>
+
+                    <div className="flex flex-col md:flex-row divide-y md:divide-y-0 md:divide-x divide-slate-100">
+                        {/* Left Part (Outbound) */}
+                        <div className="flex-1 p-5 relative group">
+                            <div className="absolute top-2 right-2 text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full uppercase tracking-wider">Outbound</div>
+                            <div className="flex justify-between items-end mb-6 mt-2">
+                                <div>
+                                    <div className="text-[10px] text-slate-400 uppercase tracking-wider mb-1 font-bold">From</div>
+                                    <div className="text-3xl font-black text-slate-900 tracking-tight">{getAirportCode(leg1From)}</div>
+                                    <div className="text-xs text-slate-500 truncate max-w-[100px] font-medium">{leg1From}</div>
+                                </div>
+                                <div className="mb-3 text-blue-300 flex flex-col items-center px-4">
+                                    <div className="flex items-center gap-1">
+                                        <div className="w-1 h-1 rounded-full bg-blue-200"></div>
+                                        <div className="w-16 h-px bg-blue-200 relative">
+                                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-blue-400 text-xs transform rotate-90">✈</div>
+                                        </div>
+                                        <div className="w-1 h-1 rounded-full bg-blue-200"></div>
+                                    </div>
+                                </div>
+                                <div className="text-right">
+                                    <div className="text-[10px] text-slate-400 uppercase tracking-wider mb-1 font-bold">To</div>
+                                    <div className="text-3xl font-black text-slate-900 tracking-tight">{getAirportCode(leg1To)}</div>
+                                    <div className="text-xs text-slate-500 truncate max-w-[100px] font-medium">{leg1To}</div>
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4 text-xs">
+                                <div>
+                                    <span className="text-slate-400 block mb-0.5">Date</span>
+                                    <span className="font-semibold text-slate-700">{date}</span>
+                                </div>
+                                <div className="text-right">
+                                    <span className="text-slate-400 block mb-0.5">Flight</span>
+                                    <span className="font-semibold text-slate-700">OD-{Math.floor(Math.random() * 900) + 100}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Right Part (Return/Next) */}
+                        <div className="flex-1 p-5 relative bg-slate-50/50 group">
+                            <div className="absolute top-2 right-2 text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full uppercase tracking-wider">Return</div>
+                            <div className="flex justify-between items-end mb-6 mt-2">
+                                <div>
+                                    <div className="text-[10px] text-slate-400 uppercase tracking-wider mb-1 font-bold">From</div>
+                                    <div className="text-3xl font-black text-slate-900 tracking-tight">{getAirportCode(leg2From)}</div>
+                                    <div className="text-xs text-slate-500 truncate max-w-[100px] font-medium">{leg2From}</div>
+                                </div>
+                                <div className="mb-3 text-amber-300 flex flex-col items-center px-4">
+                                    <div className="flex items-center gap-1">
+                                        <div className="w-1 h-1 rounded-full bg-amber-200"></div>
+                                        <div className="w-16 h-px bg-amber-200 relative">
+                                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-amber-400 text-xs transform rotate-90">✈</div>
+                                        </div>
+                                        <div className="w-1 h-1 rounded-full bg-amber-200"></div>
+                                    </div>
+                                </div>
+                                <div className="text-right">
+                                    <div className="text-[10px] text-slate-400 uppercase tracking-wider mb-1 font-bold">To</div>
+                                    <div className="text-3xl font-black text-slate-900 tracking-tight">{getAirportCode(leg2To)}</div>
+                                    <div className="text-xs text-slate-500 truncate max-w-[100px] font-medium">{leg2To}</div>
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4 text-xs">
+                                <div>
+                                    <span className="text-slate-400 block mb-0.5">Date</span>
+                                    <span className="font-semibold text-slate-700">Open</span>
+                                </div>
+                                <div className="text-right">
+                                    <span className="text-slate-400 block mb-0.5">Flight</span>
+                                    <span className="font-semibold text-slate-700">OD-{Math.floor(Math.random() * 900) + 100}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Footer / Total */}
+                    <div className="bg-slate-50 p-4 border-t border-slate-200 flex justify-between items-center">
+                        <div className="flex items-center gap-4">
+                            <div>
+                                <div className="text-[10px] text-slate-400 uppercase font-semibold">Total Paid</div>
+                                <div className="text-lg font-black text-green-600 leading-none">{price}</div>
+                            </div>
+                            <div className="h-8 w-px bg-slate-200"></div>
+                            <div>
+                                <div className="text-[10px] text-slate-400 uppercase font-semibold">Passengers</div>
+                                <div className="text-sm font-bold text-slate-700">{pax}</div>
+                            </div>
+                        </div>
+                        
+                        <div className="flex gap-0.5 opacity-30 h-6 overflow-hidden w-[100px]">
+                            {[...Array(20)].map((_, i) => (
+                                <div key={i} className="bg-slate-900" style={{ width: 2, marginLeft: 2 }} />
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+  }
+
+  return (
+    <div ref={ref} className="p-0 animate-in max-w-sm mx-auto w-full my-4">
+      <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-200 transform transition-all hover:scale-[1.02]">
+        <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-4 text-white flex justify-between items-center relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-10 -mt-10 blur-2xl pointer-events-none"></div>
+          <div className="flex items-center gap-2 relative z-10">
+            <span className="text-xl">✈️</span>
+            <div>
+              <div className="font-bold tracking-wide text-sm">BOARDING PASS</div>
+              <div className="text-[10px] text-blue-100 opacity-80">TRIPODIN TRAVEL</div>
+            </div>
+          </div>
+          <div className="text-xs font-mono bg-white/20 px-2 py-1 rounded backdrop-blur-sm border border-white/10">CONFIRMED</div>
+        </div>
+        <div className="p-5 relative bg-white">
+          <div className="flex justify-between items-end mb-5">
+            <div>
+              <div className="text-[10px] text-slate-400 uppercase tracking-wider mb-1 font-semibold">Origin</div>
+              <div className="text-3xl font-black text-slate-900 tracking-tight">{getAirportCode(from)}</div>
+              <div className="text-xs text-slate-500 truncate max-w-[100px] font-medium">{from}</div>
+            </div>
+            <div className="mb-3 text-blue-200 flex flex-col items-center">
+              <span className="text-[10px] text-slate-400 mb-1">{tripType === "round" ? "Round-trip" : "One-way"}</span>
+              <div className="flex items-center gap-1">
+                <div className="w-1 h-1 rounded-full bg-slate-300"></div>
+                <div className="w-12 h-px bg-slate-300 relative">
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-slate-400 text-xs">✈</div>
+                </div>
+                <div className="w-1 h-1 rounded-full bg-slate-300"></div>
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="text-[10px] text-slate-400 uppercase tracking-wider mb-1 font-semibold">Dest</div>
+              <div className="text-3xl font-black text-slate-900 tracking-tight">{getAirportCode(to)}</div>
+              <div className="text-xs text-slate-500 truncate max-w-[100px] font-medium">{to}</div>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-y-4 gap-x-8 border-t border-dashed border-slate-200 pt-5 mb-5">
+            <div>
+              <div className="text-[10px] text-slate-400 uppercase font-semibold">Date</div>
+              <div className="text-sm font-bold text-slate-700">{date}</div>
+            </div>
+            <div className="text-right">
+              <div className="text-[10px] text-slate-400 uppercase font-semibold">Passengers</div>
+              <div className="text-sm font-bold text-slate-700">{pax}</div>
+            </div>
+            <div>
+              <div className="text-[10px] text-slate-400 uppercase font-semibold">Flight No</div>
+              <div className="text-sm font-bold text-slate-700">OD-{Math.floor(Math.random() * 900) + 100}</div>
+            </div>
+            <div className="text-right">
+              <div className="text-[10px] text-slate-400 uppercase font-semibold">Class</div>
+              <div className="text-sm font-bold text-slate-700">Economy</div>
+            </div>
+          </div>
+          <div className="bg-green-50 rounded-xl p-3 border border-green-100 flex justify-between items-center shadow-sm">
+            <div>
+              <div className="text-[10px] text-green-600 font-medium uppercase">Total Paid</div>
+              <div className="text-lg font-black text-green-700">{price}</div>
+            </div>
+            <div className="h-8 w-8 rounded-full bg-green-100 text-green-600 grid place-items-center shadow-sm">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>
+            </div>
+          </div>
+          <div className="absolute -left-3 top-[62%] w-6 h-6 bg-[#f0f4f8] rounded-full shadow-[inset_-2px_0_2px_rgba(0,0,0,0.05)]" />
+          <div className="absolute -right-3 top-[62%] w-6 h-6 bg-[#f0f4f8] rounded-full shadow-[inset_2px_0_2px_rgba(0,0,0,0.05)]" />
+        </div>
+        <div className="bg-slate-50 p-4 border-t border-slate-200 flex justify-between items-center">
+          <div className="flex gap-0.5 opacity-60 h-8 overflow-hidden w-full max-w-[200px]">
+            {[...Array(40)].map((_, i) => (
+              <div key={i} className="bg-slate-800" style={{ width: Math.random() > 0.5 ? 2 : 1, marginLeft: Math.random() > 0.7 ? 1 : 0 }} />
+            ))}
+          </div>
+          <div className="text-[10px] text-slate-400 font-mono font-medium">TRIPODIN</div>
+        </div>
+      </div>
     </div>
   );
 }

@@ -178,8 +178,11 @@ export function FlightModal({ open, onClose, originCountry, destCountry, totalSt
                       className="w-full border border-slate-200 rounded-lg py-2.5 px-3 text-slate-700 font-medium focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-slate-50 focus:bg-white" 
                       type="number" 
                       min={1} 
-                      value={pax} 
-                      onChange={(e) => setPax(Number(e.target.value))} 
+                      value={pax || ""} 
+                      onChange={(e) => {
+                        const v = e.target.value.replace(/^0+/, "");
+                        setPax(v ? parseInt(v, 10) : 0);
+                      }} 
                     />
                     <span className="absolute right-3 top-2.5 text-slate-400 text-sm">pax</span>
                   </div>
@@ -261,7 +264,7 @@ export function FlightModal({ open, onClose, originCountry, destCountry, totalSt
               </div>
             </div>
           </div>
-        <div className="mt-3 flex gap-2">
+        <div className="mt-3 flex flex-wrap gap-2">
           <button className="btn btn-primary" onClick={() => setShowConf(true)}>Search via Amadeus</button>
         </div>
         <div className="mt-4 grid gap-2">
@@ -290,6 +293,59 @@ export function FlightModal({ open, onClose, originCountry, destCountry, totalSt
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+export function PaymentModal({ open, onClose, onPurchase, totalCost }: { open: boolean; onClose: () => void; onPurchase: () => void; totalCost: string }) {
+  useEffect(() => { const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); }; window.addEventListener("keydown", onKey); return () => window.removeEventListener("keydown", onKey); }, [onClose]);
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 bg-black/40 grid place-items-center z-[100] animate-in fade-in duration-200" onClick={onClose}>
+        <div className="bp-card w-full max-w-md flex flex-col overflow-hidden animate-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
+            <div className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white p-5 flex justify-between items-center shrink-0 shadow-md">
+                <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-white/20 grid place-items-center text-2xl backdrop-blur-sm">💳</div>
+                    <div>
+                        <div className="text-xl font-bold">Secure Payment</div>
+                        <div className="text-xs text-emerald-100 font-medium tracking-wide opacity-90">TEST MODE</div>
+                    </div>
+                </div>
+                <button onClick={onClose} className="bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded-lg transition-colors text-xs font-medium">Close</button>
+            </div>
+            <div className="p-6 bg-slate-50">
+                <div className="text-sm text-slate-500 mb-6 text-center leading-relaxed">
+                    This is a demonstration payment step.<br/>No actual charge will be made to your card.
+                </div>
+                
+                <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm mb-6 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-16 h-16 bg-emerald-50 rounded-bl-full -mr-8 -mt-8"></div>
+                    <div className="flex justify-between items-end mb-2 relative z-10">
+                        <span className="text-slate-500 font-medium text-sm uppercase tracking-wider">Total Due</span>
+                        <span className="text-3xl font-black text-slate-900 tracking-tight">{totalCost}</span>
+                    </div>
+                    <div className="h-px bg-slate-100 my-3" />
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-xs text-slate-400">
+                            <span>🔒</span>
+                            <span>256-bit SSL Encrypted</span>
+                        </div>
+                        <div className="flex gap-1 opacity-50">
+                             <div className="w-8 h-5 bg-slate-200 rounded"></div>
+                             <div className="w-8 h-5 bg-slate-200 rounded"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <button 
+                    className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 rounded-xl shadow-lg shadow-emerald-200 transition-all transform active:scale-[0.98] flex items-center justify-center gap-2 text-lg group"
+                    onClick={onPurchase}
+                >
+                    <span>Complete Purchase</span>
+                    <span className="group-hover:translate-x-1 transition-transform">→</span>
+                </button>
+            </div>
+        </div>
     </div>
   );
 }
@@ -407,7 +463,7 @@ export function HotelModal({ open, onClose, destCountry, totalStay, stays }: { o
               </div>
               )}
               
-              <div className="bg-slate-50 p-3 rounded-lg border border-slate-100 md:col-span-2 grid grid-cols-2 gap-4">
+              <div className="bg-slate-50 p-3 rounded-lg border border-slate-100 md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-semibold text-slate-600 mb-1.5">Check-in (Trip Start)</label>
                   <input className="w-full border border-slate-200 rounded-lg p-2 text-sm focus:ring-blue-500 focus:border-blue-500" type="date" value={inDate} onChange={(e) => setInDate(e.target.value)} />
@@ -425,8 +481,11 @@ export function HotelModal({ open, onClose, destCountry, totalStay, stays }: { o
                     className="w-full border border-slate-200 rounded-lg py-2.5 px-3 text-slate-700 font-medium focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" 
                     type="number" 
                     min={1} 
-                    value={guests} 
-                    onChange={(e) => setGuests(Number(e.target.value))} 
+                    value={guests || ""} 
+                    onChange={(e) => {
+                      const v = e.target.value.replace(/^0+/, "");
+                      setGuests(v ? parseInt(v, 10) : 0);
+                    }} 
                   />
                   <span className="absolute right-3 top-2.5 text-slate-400 text-sm">pax</span>
                 </div>
@@ -439,8 +498,11 @@ export function HotelModal({ open, onClose, destCountry, totalStay, stays }: { o
                     className="w-full border border-slate-200 rounded-lg py-2.5 px-3 text-slate-700 font-medium focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" 
                     type="number" 
                     min={1} 
-                    value={rooms} 
-                    onChange={(e) => setRooms(Number(e.target.value))} 
+                    value={rooms || ""} 
+                    onChange={(e) => {
+                      const v = e.target.value.replace(/^0+/, "");
+                      setRooms(v ? parseInt(v, 10) : 0);
+                    }} 
                   />
                   <span className="absolute right-3 top-2.5 text-slate-400 text-sm">qty</span>
                 </div>
@@ -567,87 +629,124 @@ export function InsuranceModal({ open, onClose, originCountry, destCountry, tota
   if (!open) return null;
   return (
     <div className="fixed inset-0 bg-black/40 grid place-items-center z-[100]" onClick={onClose}>
-      <div className="card w-full max-w-2xl p-4" onClick={(e) => e.stopPropagation()}>
-        <div className="text-xl font-semibold mb-2">Visa-Compliant Travel Insurance</div>
-        <div className="grid md:grid-cols-2 gap-3">
-          <div>
-            <div className="text-sm mb-1">Full Name</div>
-            <input className="w-full border rounded p-2" placeholder="As shown on passport" value={name} onChange={(e) => setName(e.target.value)} />
-          </div>
-          <div>
-            <div className="text-sm mb-1">Date of Birth</div>
-            <input className="w-full border rounded p-2" type="date" value={dob} onChange={(e) => setDob(e.target.value)} />
-          </div>
-          <div>
-            <div className="text-sm mb-1">Nationality</div>
-            <input className="w-full border rounded p-2" value={nationality} onChange={(e) => setNationality(e.target.value)} />
-          </div>
-          <div>
-            <div className="text-sm mb-1">Destination</div>
-            <input className="w-full border rounded p-2" value={destination} onChange={(e) => setDestination(e.target.value)} />
-          </div>
-          <div>
-            <div className="text-sm mb-1">Departure Date</div>
-            <input className="w-full border rounded p-2" type="date" value={dep} onChange={(e) => setDep(e.target.value)} />
-          </div>
-          <div>
-            <div className="text-sm mb-1">Return Date</div>
-            <input className="w-full border rounded p-2" type="date" value={ret} onChange={(e) => setRet(e.target.value)} />
-          </div>
-          <div>
-            <div className="text-sm mb-1">Coverage Level</div>
-            <select className="w-full border rounded p-2" value={level} onChange={(e) => setLevel(e.target.value)}>
-              {(["Basic", "Standard", "Premium"] as const).map((x) => (<option key={x} value={x}>{x}</option>))}
-            </select>
-          </div>
-          <div>
-            <div className="text-sm mb-1">Maximum Coverage Amount</div>
-            <select className="w-full border rounded p-2" value={amount} onChange={(e) => setAmount(e.target.value)}>
-              {["30000", "50000", "100000"].map((x) => (<option key={x} value={x}>${x} USD</option>))}
-            </select>
-          </div>
-        </div>
-        <div className="mt-3">
-          <div className="text-sm mb-1">Optional Add-ons</div>
-          <div className="flex flex-wrap gap-2">
-            {["Adventure sports", "Trip cancellation", "Extra luggage"].map((x) => (
-              <label key={x} className="inline-flex items-center gap-2">
-                <input type="checkbox" checked={addons.includes(x)} onChange={(e) => {
-                  const v = e.target.checked;
-                  if (v) setAddons((a) => [...a, x]); else setAddons((a) => a.filter((y) => y !== x));
-                }} />
-                <span>{x}</span>
-              </label>
-            ))}
-          </div>
-        </div>
-        <div className="mt-3">
-          <label className="inline-flex items-center gap-2">
-            <input type="checkbox" checked={solo} onChange={(e) => setSolo(e.target.checked)} />
-            <span>Are you traveling alone?</span>
-          </label>
-          {!solo ? (
-            <div className="mt-2">
-              <div className="text-sm mb-1">Number of Travelers</div>
-              <input className="w-full border rounded p-2" type="number" min={1} value={trav} onChange={(e) => setTrav(Number(e.target.value))} />
+      <div className="bp-card w-full max-w-2xl max-h-[90vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+        <div className="bp-header-blue">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-white/20 grid place-items-center text-2xl backdrop-blur-sm">🛡️</div>
+            <div>
+              <div className="text-xl font-bold">Travel Insurance</div>
+              <div className="text-xs text-blue-100 font-medium tracking-wide opacity-90">VISA COMPLIANT</div>
             </div>
-          ) : null}
+          </div>
+          <button onClick={onClose} className="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg transition-colors text-sm font-medium">Close</button>
         </div>
-        <div className="mt-4 card p-3">
-          <div className="font-medium">Summary</div>
-          <div className="text-sm">{duration} days in {destination}</div>
-          <div className="text-sm">Plan {level} – ${amount} coverage</div>
-          <div className="text-sm">Add-ons: {addons.join(", ") || "None"}</div>
-          <div className="font-semibold mt-1">Total: $18.50 USD</div>
-          <label className="inline-flex items-center gap-2 mt-2">
-            <input type="checkbox" />
-            <span>Terms and Conditions</span>
-          </label>
-        </div>
-        <div className="mt-3 flex gap-2">
-          <button className="btn btn-primary">Generate My Travel Insurance</button>
-          <button className="btn btn-secondary">Add to Visa Document Bundle</button>
-          <button className="btn btn-secondary" onClick={onClose}>Close</button>
+        
+        <div className="p-4 overflow-y-auto custom-scrollbar">
+          <div className="grid md:grid-cols-2 gap-3">
+            <div>
+              <div className="text-sm mb-1 font-medium text-slate-700">Full Name</div>
+              <input className="w-full border border-slate-200 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none transition-all" placeholder="As shown on passport" value={name} onChange={(e) => setName(e.target.value)} />
+            </div>
+            <div>
+              <div className="text-sm mb-1 font-medium text-slate-700">Date of Birth</div>
+              <input className="w-full border border-slate-200 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none transition-all" type="date" value={dob} onChange={(e) => setDob(e.target.value)} />
+            </div>
+            <div>
+              <div className="text-sm mb-1 font-medium text-slate-700">Nationality</div>
+              <input className="w-full border border-slate-200 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none transition-all" value={nationality} onChange={(e) => setNationality(e.target.value)} />
+            </div>
+            <div>
+              <div className="text-sm mb-1 font-medium text-slate-700">Destination</div>
+              <input className="w-full border border-slate-200 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none transition-all" value={destination} onChange={(e) => setDestination(e.target.value)} />
+            </div>
+            <div>
+              <div className="text-sm mb-1 font-medium text-slate-700">Departure Date</div>
+              <input className="w-full border border-slate-200 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none transition-all" type="date" value={dep} onChange={(e) => setDep(e.target.value)} />
+            </div>
+            <div>
+              <div className="text-sm mb-1 font-medium text-slate-700">Return Date</div>
+              <input className="w-full border border-slate-200 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none transition-all" type="date" value={ret} onChange={(e) => setRet(e.target.value)} />
+            </div>
+            <div>
+              <div className="text-sm mb-1 font-medium text-slate-700">Coverage Level</div>
+              <select className="w-full border border-slate-200 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none transition-all bg-white" value={level} onChange={(e) => setLevel(e.target.value)}>
+                {(["Basic", "Standard", "Premium"] as const).map((x) => (<option key={x} value={x}>{x}</option>))}
+              </select>
+            </div>
+            <div>
+              <div className="text-sm mb-1 font-medium text-slate-700">Maximum Coverage Amount</div>
+              <select className="w-full border border-slate-200 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none transition-all bg-white" value={amount} onChange={(e) => setAmount(e.target.value)}>
+                {["30000", "50000", "100000"].map((x) => (<option key={x} value={x}>${x} USD</option>))}
+              </select>
+            </div>
+          </div>
+          
+          <div className="mt-4 bg-slate-50 p-4 rounded-xl border border-slate-100">
+            <div className="text-sm font-bold text-slate-700 uppercase tracking-wider mb-3">Optional Add-ons</div>
+            <div className="flex flex-wrap gap-3">
+              {["Adventure sports", "Trip cancellation", "Extra luggage"].map((x) => (
+                <label key={x} className="inline-flex items-center gap-2 bg-white px-3 py-2 rounded-lg border border-slate-200 shadow-sm hover:border-blue-300 transition-colors cursor-pointer">
+                  <input type="checkbox" className="rounded text-blue-600 focus:ring-blue-500" checked={addons.includes(x)} onChange={(e) => {
+                    const v = e.target.checked;
+                    if (v) setAddons((a) => [...a, x]); else setAddons((a) => a.filter((y) => y !== x));
+                  }} />
+                  <span className="text-sm text-slate-700 font-medium">{x}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div className="mt-4">
+            <label className="inline-flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" className="rounded text-blue-600 focus:ring-blue-500" checked={solo} onChange={(e) => setSolo(e.target.checked)} />
+              <span className="text-sm font-medium text-slate-700">Are you traveling alone?</span>
+            </label>
+            {!solo ? (
+              <div className="mt-2">
+                <div className="font-semibold mb-1 text-sm text-slate-700">Number of Travelers</div>
+                <input className="w-full border border-slate-200 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none transition-all" type="number" min={1} value={trav || ""} onChange={(e) => {
+                  const v = e.target.value.replace(/^0+/, "");
+                  setTrav(v ? parseInt(v, 10) : 0);
+                }} />
+              </div>
+            ) : null}
+          </div>
+
+          <div className="mt-6 bg-blue-50 p-5 rounded-xl border border-blue-100">
+            <div className="font-bold text-blue-900 mb-2">Quote Summary</div>
+            <div className="space-y-1 text-sm text-blue-800">
+              <div className="flex justify-between">
+                <span>Duration:</span>
+                <span className="font-medium">{duration} days in {destination}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Plan:</span>
+                <span className="font-medium">{level} – ${amount} coverage</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Add-ons:</span>
+                <span className="font-medium">{addons.join(", ") || "None"}</span>
+              </div>
+            </div>
+            <div className="mt-3 pt-3 border-t border-blue-200 flex justify-between items-center">
+              <span className="font-bold text-lg text-blue-900">Total</span>
+              <span className="font-bold text-2xl text-blue-600">$18.50 USD</span>
+            </div>
+            <label className="inline-flex items-center gap-2 mt-3 cursor-pointer">
+              <input type="checkbox" className="rounded text-blue-600 focus:ring-blue-500" />
+              <span className="text-xs text-blue-700">I agree to the Terms and Conditions and Policy Wording</span>
+            </label>
+          </div>
+
+          <div className="mt-6 grid gap-3">
+            <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-blue-200 transition-all transform active:scale-[0.99] flex justify-center items-center gap-2">
+              <span>Generate My Travel Insurance</span>
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            </button>
+            <button className="w-full bg-white border-2 border-slate-200 hover:border-blue-500 hover:text-blue-600 text-slate-600 font-bold py-3.5 rounded-xl transition-all flex justify-center items-center gap-2">
+              <span>Add to Visa Document Bundle</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>

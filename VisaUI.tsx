@@ -92,7 +92,7 @@ export default function VisaUI({ origin, dest }: { origin: string; dest: string 
                   
                   {/* Card Body */}
                   <div className="p-6">
-                      <div className="grid grid-cols-3 gap-4 mb-4 text-center">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4 text-center">
                           <div className="bg-slate-50 rounded-lg p-2">
                               <div className="text-xs text-slate-500 uppercase tracking-wider font-semibold mb-1">Fee</div>
                               <div className="font-bold text-slate-800">{v.fee}</div>

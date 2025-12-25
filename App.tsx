@@ -1,9 +1,9 @@
 import React, { useMemo, useState } from "react";
 import VisaUI from "./VisaUI";
-import { FlightModal, HotelModal, InsuranceModal } from "./BookingModals";
+import { FlightModal, HotelModal, InsuranceModal, PaymentModal } from "./BookingModals";
 import MultiCityModal, { ReturnFromModal } from "./MultiCityModal";
 import UpsellModal from "./UpsellModal";
-import { NoVisaBubble, SelectCitiesBubble, InfoBubble, UpsellBubble } from "./ChatBubbles";
+import { NoVisaBubble, SelectCitiesBubble, InfoBubble, UpsellBubble, BoardingPassBubble } from "./ChatBubbles";
 import { isVisaFree, getAllCountries } from "./visaEngine";
 import { getCities } from "./cityData";
 
@@ -140,9 +140,11 @@ function Chatbot({ onSetDest, onSetOrigin, user, setRoute }: { onSetDest: (c: st
   const [toCity, setToCity] = useState<string>("");
   const [upsellShown, setUpsellShown] = useState(false);
   const [showMulti, setShowMulti] = useState(false);
+  const [showPayment, setShowPayment] = useState(false);
+  const [paymentAmount, setPaymentAmount] = useState("");
   const [totalStay, setTotalStay] = useState<number>(0);
   const [itinerary, setItinerary] = useState<string[]>([]);
-  const [transportModes, setTransportModes] = useState<Record<number, "flight" | "train" | "car">>({});
+  const [transportModes, setTransportModes] = useState<Record<number, "flight" | "train" | "car" | "surface">>({});
   const [tripType, setTripType] = useState<"oneway" | "round" | "multicity">("round");
   const [cityStays, setCityStays] = useState<Record<string, number>>({});
   const listRef = React.useRef<HTMLDivElement>(null);
@@ -154,7 +156,7 @@ function Chatbot({ onSetDest, onSetOrigin, user, setRoute }: { onSetDest: (c: st
   const originCities = React.useMemo(() => (origin ? getCities(origin) : []), [origin]);
   const destCities = React.useMemo(() => (dest ? getCities(dest) : []), [dest]);
 
-  const handleUpdate = React.useCallback((f: string, t: string, d: number, i: string[], tm: Record<number, "flight" | "train" | "car">, tt: "oneway" | "round" | "multicity", s: Record<string, number>) => {
+  const handleUpdate = React.useCallback((f: string, t: string, d: number, i: string[], tm: Record<number, "flight" | "train" | "car" | "surface">, tt: "oneway" | "round" | "multicity", s: Record<string, number>) => {
       setFromCity(f);
       setToCity(t);
       if (d) setTotalStay(d);
@@ -292,7 +294,7 @@ function Chatbot({ onSetDest, onSetOrigin, user, setRoute }: { onSetDest: (c: st
       ) : null}
 
       {messages.length > 0 ? (
-      <div className="card p-0 mb-4" ref={listRef}>
+      <div className="card p-0 mb-4" ref={listRef} id="chat-container">
         <div className="p-4 space-y-3">
           {messages.map((m, i) => (
             <div key={i} className="animate-[fadeIn_0.3s_ease]">
@@ -317,6 +319,17 @@ function Chatbot({ onSetDest, onSetOrigin, user, setRoute }: { onSetDest: (c: st
                   to={toCity}
                 />
               ) : null}
+              {m.type === "boardingPass" ? (
+                <BoardingPassBubble 
+                    from={fromCity || origin || "Origin"} 
+                    to={toCity || dest || "Dest"} 
+                    date={new Date().toLocaleDateString()} 
+                    pax={1} 
+                    price={`$${paymentAmount}`} 
+                    tripType={tripType} 
+                    itinerary={itinerary}
+                />
+              ) : null}
             </div>
           ))}
         </div>
@@ -325,7 +338,33 @@ function Chatbot({ onSetDest, onSetOrigin, user, setRoute }: { onSetDest: (c: st
 
       <HotelModal open={showHotel} onClose={() => setShowHotel(false)} destCountry={dest || ""} totalStay={totalStay} stays={cityStays} />
       <InsuranceModal open={showInsurance} onClose={() => setShowInsurance(false)} originCountry={origin || ""} destCountry={dest || ""} totalStay={totalStay} />
-      <MultiCityModal open={showMulti} onClose={() => setShowMulti(false)} originCountry={origin || ""} destCountry={dest || ""} onSubmit={() => setShowMulti(false)} transportModes={transportModes} fullItinerary={itinerary} tripType={tripType} totalStay={totalStay} stays={cityStays} />
+      <MultiCityModal 
+          open={showMulti} 
+          onClose={() => setShowMulti(false)} 
+          originCountry={origin || ""} 
+          destCountry={dest || ""} 
+          onSubmit={(cities, cost) => { 
+              setShowMulti(false); 
+              if (cost) {
+                  setPaymentAmount(cost);
+                  setShowPayment(true);
+              }
+          }} 
+          transportModes={transportModes} 
+          fullItinerary={itinerary} 
+          tripType={tripType} 
+          totalStay={totalStay} 
+          stays={cityStays} 
+      />
+      <PaymentModal 
+          open={showPayment} 
+          onClose={() => setShowPayment(false)} 
+          totalCost={paymentAmount} 
+          onPurchase={() => {
+              setShowPayment(false);
+              setMessages((m) => [...m, { type: "boardingPass" }]);
+          }} 
+      />
     </div>
   );
 }
